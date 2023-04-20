@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import router from '@/router/index'
+import { type } from 'os';
 
 const votes = [
     {
@@ -19,8 +20,12 @@ const votes = [
     }
 ]
 
-const navigateTo = (id: number) => {
-    router.push(`/vote/${id}`)
+const navigateTo = (url: number | string) => {
+    if (typeof url == 'string') {
+        router.push(`${url}`)
+    } else {
+        router.push(`/vote/${url}`)
+    }
 }
 </script>
 
@@ -33,9 +38,13 @@ const navigateTo = (id: number) => {
             </template>
         </v-text-field>
         <br />
-        <div class="text-h5">
-            <b>Ongoing votings</b>
+        <div class="d-flex align-center justify-space-between">
+            <div class="text-h5">
+                <b>Ongoing votings</b>
+            </div>
+            <v-btn @click="navigateTo('/addvote')" variant="tonal" color="primary">Create vote</v-btn>
         </div>
+
         <br />
         <v-card class="w-75 mx-auto">
             <v-list lines="one">
