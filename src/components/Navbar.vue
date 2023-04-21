@@ -1,25 +1,22 @@
 <template>
     <div class="d-flex justify-space-between align-center w-100" style="height: 50px; background-color: #3f51b5;">
         <div class="d-flex justify-start align-center">
-            <div class="mx-2 text-white"><b @click="navigateTo('')">E voting</b></div>
+            <div class="mx-2 text-white"><b @click="navigateTo('')">Star Voting</b></div>
             <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('votes')">Votes</v-btn>
             <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('roadmap')">Roadmap</v-btn>
         </div>
         <div class="d-flex justify-start align-center">
             <v-btn class="mx-2 text-white" @click="toggleTheme()" icon="mdi-theme-light-dark" variant="text"></v-btn>
-            
-            <v-select
-                v-model="selectedChain"
-                :items="['ThunderCore', 'ThunderCore Testnet', 'Linea Testnet', 'Gnosis']"
-                hide-details="auto"
-                density="comfortable"
-            ></v-select>
 
-            <v-chip v-if="address != ''">{{ beautifyAddress() }}</v-chip>
+            <v-select class="mx-2 text-white" v-model="selectedChain"
+                :items="['ThunderCore', 'ThunderCore Testnet', 'Linea Testnet', 'Gnosis']" hide-details="auto"
+                density="comfortable"></v-select>
+
+            <v-chip class="mx-2 text-white" v-if="address != ''">{{ beautifyAddress() }}</v-chip>
             <v-btn class="mx-2" v-if="address == ''" @click="connectWallet()" variant="outlined"
                 color="secondary">Connect</v-btn>
             <v-btn class="mx-2" v-if="address != ''" @click="disconnectWallet()" variant="outlined"
-                color="secondary">Disconnect</v-btn>
+                color="warning">Disconnect</v-btn>
         </div>
     </div>
     <v-divider class="mb-6"></v-divider>

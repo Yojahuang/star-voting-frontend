@@ -8,9 +8,11 @@
 
         <div class="my-4">{{ payload.description }}</div>
 
-        <div class="mx-auto my-4" style="width: 600px;height:400px;" id="echart"></div>
+        <div v-show="payload.revealRealtimeResult" class="mx-auto my-4" style="width: 600px;height:400px;" id="echart">
+        </div>
 
-        <div class="font-weight-thin">Your remaining votes: <p class="font-weight-bold d-inline">{{ calculateRemainVote() }}
+        <div class="font-weight-thin">Your remaining votes: <p class="font-weight-bold d-inline"
+                :style="{ color: remainVoteFontColor() }">{{ calculateRemainVote() }}
             </p>
         </div>
 
@@ -39,7 +41,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { ref, onMounted } from "vue"
+import { ref } from "vue"
 import AES from 'crypto-js/aes';
 import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
@@ -47,7 +49,7 @@ import { Identity } from "@semaphore-protocol/identity"
 
 const passcodeDialog = ref(true)
 
-const info: any = { "useQuadratic": false, "options": 2, "payload": "U2FsdGVkX18zCE3PhtIG0wP18pfeXczVljVgLEoUBx+4xlQr1v93i5FyJpZaHszTGwhHq53iTEMFHle/TCd2y1KJQFkfZUdOOVVChO7DHPu5zYSiPZFNv6yO9Bjqynd5TZUvgCHOz8VXgcbJWbug0z7qipAzqYRzX+F9pmcRnuyZPVJMg1HOjgHqugWOr9+CyoC+pGXIezr3GtviRS4q/Q==" }
+const info: any = { "useQuadratic": false, "options": 2, "payload": "U2FsdGVkX18+gVJVZU1h7MDW6xDofBw8lVd+NfzazaCnHnd0G1Zo/03e98mXQ8H4ysZRr+btNMMhRI/5ns5R/wAGa0gRXcGtEUlBUZsZ8tDkORoUN3HS1usn08N8M1kloGqYoIKFCJjZH5FvuOpWsQsh/dMQkHfdEhmVLXn9tjURDMlI2PN9O7N906VWCxDk0Karhn4Y8IhevI1+gido8KZ5DLiXXFkGia0h6e7YLt8=" }
 const passcode = ref("t031")
 
 const route = useRoute()
@@ -57,7 +59,8 @@ const payload = ref({
     title: "",
     description: "",
     voteCount: 0,
-    options: []
+    options: [],
+    revealRealtimeResult: false,
 })
 const vote = ref<number[]>([])
 
@@ -84,19 +87,30 @@ const sendVote = () => {
     const identify = new Identity(identityStr)
 }
 
+const parseRealtimeResult = (): number[] => {
+    const result: number[] = []
+    if (payload.value.revealRealtimeResult == false) {
+        for (let i = 0; i < info.options; i++) result.push(0)
+        return result
+    }
+
+    // the code of parsing realtime result from blockchain
+    return result
+}
+
 const setupChart = () => {
     let myChart = echarts.init((document.getElementById('echart') as any));
     const option = {
         xAxis: {
             type: 'category',
-            data: ['小明', '小美']
+            data: payload.value.options
         },
         yAxis: {
             type: 'value'
         },
         series: [
             {
-                data: [120, 200],
+                data: parseRealtimeResult,
                 type: 'bar'
             }
         ]
@@ -130,6 +144,14 @@ const calculateRemainVote = () => {
     return ans
 }
 
+const remainVoteFontColor = () => {
+    if (calculateRemainVote() >= 0) {
+        return 'white'
+    } else {
+        return 'red'
+    }
+}
+
 const decrypt = () => {
     const bytePayload = AES.decrypt(info.payload, passcode.value)
     try {
@@ -138,6 +160,7 @@ const decrypt = () => {
         console.log(info.payload.description)
         console.log(info.payload.options)
         console.log(info.payload.voteCount)
+        console.log(info.payload.revealRealtimeResult)
 
         payload.value = info.payload
 

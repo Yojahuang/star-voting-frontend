@@ -23,6 +23,7 @@
 
         <div class="form-title my-4">Settings</div>
         <v-checkbox hide-details="auto" v-model="useQuadratic" label="Use quadratic voting"></v-checkbox>
+        <v-checkbox hide-details="auto" v-model="revealRealtimeResult" label="Reveal realtime result"></v-checkbox>
         <v-text-field hide-details="auto" v-model="voteCount" label="How many votes each people should have"></v-text-field>
         <v-text-field hide-details="auto" v-model="passcode" label="Passcode"></v-text-field>
 
@@ -33,6 +34,8 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import AES from 'crypto-js/aes';
+import { v4 as uuidv4 } from 'uuid';
+import { ethers } from "ethers"
 
 const title = ref("")
 const description = ref("")
@@ -41,6 +44,7 @@ const newOption = ref("")
 const useQuadratic = ref(false)
 const passcode = ref("")
 const voteCount = ref(1)
+const revealRealtimeResult = ref(false)
 
 const addOption = () => {
     if (newOption.value != "")
@@ -57,7 +61,8 @@ const createVote = () => {
         title: title.value,
         description: description.value,
         options: options.value,
-        voteCount: voteCount.value
+        voteCount: voteCount.value,
+        revealRealtimeResult: revealRealtimeResult.value
     }
 
     const payloadCiphertext = AES.encrypt(JSON.stringify(payload), passcode.value).toString()
@@ -70,6 +75,11 @@ const createVote = () => {
 
     console.log(JSON.stringify(result))
 
+    const uuid = uuidv4()
+    let utf8Encode = new TextEncoder();
+
+    const id = ethers.utils.keccak256(utf8Encode.encode(uuid))
+    console.log(id)
     // Upload result to smart contract!
 }
 </script>
