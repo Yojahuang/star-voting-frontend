@@ -7,6 +7,14 @@
         </div>
         <div class="d-flex justify-start align-center">
             <v-btn class="mx-2 text-white" @click="toggleTheme()" icon="mdi-theme-light-dark" variant="text"></v-btn>
+            
+            <v-select
+                v-model="selectedChain"
+                :items="['ThunderCore', 'ThunderCore Testnet', 'Linea Testnet', 'Gnosis']"
+                hide-details="auto"
+                density="comfortable"
+            ></v-select>
+
             <v-chip v-if="address != ''">{{ beautifyAddress() }}</v-chip>
             <v-btn class="mx-2" v-if="address == ''" @click="connectWallet()" variant="outlined"
                 color="secondary">Connect</v-btn>
@@ -21,6 +29,10 @@
 import { useTheme } from "vuetify"
 import router from '@/router/index'
 import BrowserWallet from "@/composables/wallet"
+import { useGlobalStore } from "@/stores/Global"
+import { storeToRefs } from "pinia"
+
+const { selectedChain } = storeToRefs(useGlobalStore())
 
 const theme = useTheme()
 
