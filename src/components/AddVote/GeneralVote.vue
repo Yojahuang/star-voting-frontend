@@ -2,85 +2,132 @@
     <div class="mx-4">
 
         <div class="form-title my-4">Title</div>
-        <v-text-field hide-details="auto" v-model="title" label="Title"></v-text-field>
+        <v-text-field hide-details="auto" v-model="data.title" label="Title"></v-text-field>
 
         <div class="form-title my-4">Description</div>
-        <v-textarea hide-details="auto" v-model="description" label="Description"></v-textarea>
+        <v-textarea hide-details="auto" v-model="data.description" label="Description"></v-textarea>
 
         <div class="form-title my-4">Options</div>
-        <template v-for="(option, index) in options">
-            <v-text-field hide-details="auto" v-model="options[index]" label="Option">
+        <template v-for="(option, index) in data.options">
+            <v-text-field hide-details="auto" v-model="data.options[index]" label="Option">
                 <template #append-inner>
                     <v-icon @click="removeOption(index)" icon="mdi-trash-can"></v-icon>
                 </template>
             </v-text-field>
         </template>
-        <v-text-field hide-details="auto" @keydown.enter="addOption()" v-model="newOption" label="Add option">
+        <v-text-field hide-details="auto" @keydown.enter="addOption()" v-model="data.newOption" label="Add option">
             <template #append-inner>
                 <v-icon @click="addOption()" icon="mdi-plus"></v-icon>
             </template>
         </v-text-field>
 
         <div class="form-title my-4">Settings</div>
-        <v-checkbox hide-details="auto" v-model="useQuadratic" label="Use quadratic voting"></v-checkbox>
-        <v-checkbox hide-details="auto" v-model="revealRealtimeResult" label="Reveal realtime result"></v-checkbox>
-        <v-text-field hide-details="auto" v-model="voteCount" label="How many votes each people should have"></v-text-field>
-        <v-text-field hide-details="auto" v-model="passcode" label="Passcode"></v-text-field>
+        <v-checkbox hide-details="auto" v-model="data.useQuadratic" label="Use quadratic voting"></v-checkbox>
+        <v-checkbox hide-details="auto" v-model="data.showRealtimeResult" label="Show realtime result"></v-checkbox>
+        <v-text-field hide-details="auto" v-model="data.voteCount"
+            label="How many votes each people should have"></v-text-field>
+        <v-text-field hide-details="auto" v-model="data.passcode"
+            label="Passcode, please make sure you don't lose it"></v-text-field>
 
         <v-btn class="w-100 my-4" @click="createVote" color="primary">Create</v-btn>
     </div>
+
+    <v-dialog v-model="data.shareVotelinkDialog">
+        <v-card class="mx-auto w-75" max-width="300">
+            <v-icon class="mx-auto" icon="mdi-check-bold" size="50"></v-icon>
+            Your vote has been created! <br />
+            <div class="d-flex align-center w-100 justify-center">
+                <div class="text-center">{{ displayShortLink() }}</div>
+                <v-btn variant="text" @click="copyLink()" icon="mdi-content-copy"></v-btn>
+            </div>
+        </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="data.snackbar">
+        Link copied!
+
+        <template v-slot:actions>
+            <v-btn color="pink" variant="text" @click="data.snackbar = false">
+                Close
+            </v-btn>
+        </template>
+    </v-snackbar>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, reactive } from "vue"
 import AES from 'crypto-js/aes';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from "ethers"
 
-const title = ref("")
-const description = ref("")
-const options = ref<string[]>([])
-const newOption = ref("")
-const useQuadratic = ref(false)
-const passcode = ref("")
-const voteCount = ref(1)
-const revealRealtimeResult = ref(false)
+const data = reactive({
+    title: "",
+    description: "",
+    options: [] as string[],
+    newOption: "",
+    useQuadratic: false,
+    passcode: "",
+    voteCount: 1,
+    shareVotelinkDialog: false,
+    pollUuid: "",
+    snackbar: false,
+    showRealtimeResult: false,
+})
 
 const addOption = () => {
-    if (newOption.value != "")
-        options.value.push(newOption.value)
-    newOption.value = ""
+    if (data.newOption != "")
+        data.options.push(data.newOption)
+    data.newOption = ""
 }
 
 const removeOption = (idx: number) => {
-    options.value.splice(idx, 1)
+    data.options.splice(idx, 1)
 }
 
-const createVote = () => {
+const displayShortLink = () => {
+    const actualLink = `http://127.0.0.1:5173/${data.pollUuid.value}`
+
+    const length = actualLink.length
+    return actualLink.substring(0, 5) + "..." + actualLink.substring(length - 5, length)
+}
+
+const copyLink = async () => {
+    await navigator.clipboard.writeText(`http://127.0.0.1:5173/${data.pollUuid.value}`)
+    data.snackbar = true
+}
+
+const createVote = async () => {
+    const voteData: any = {
+        showRealtimeResult: data.showRealtimeResult,
+        payload: {}
+    }
     const payload: any = {
-        title: title.value,
-        description: description.value,
-        options: options.value,
-        voteCount: voteCount.value,
-        revealRealtimeResult: revealRealtimeResult.value
+        title: data.title,
+        description: data.description,
+        options: data.options,
+        voteCount: data.voteCount,
+        useQuadratic: data.useQuadratic,
     }
 
-    const payloadCiphertext = AES.encrypt(JSON.stringify(payload), passcode.value).toString()
+    const payloadCiphertext = AES.encrypt(JSON.stringify(payload), data.passcode).toString()
 
-    const result = {
-        useQuadratic: useQuadratic.value,
-        options: options.value.length,
-        payload: payloadCiphertext,
-    }
+    voteData.payload = payloadCiphertext
 
-    console.log(JSON.stringify(result))
+    console.log(JSON.stringify(voteData))
 
     const uuid = uuidv4()
     let utf8Encode = new TextEncoder();
 
-    const id = ethers.utils.keccak256(utf8Encode.encode(uuid))
-    console.log(id)
+    data.pollUuid = (ethers.utils.keccak256(utf8Encode.encode(uuid))).slice(2)
+
+    // Generate public key and private key
+
+
     // Upload result to smart contract!
+
+
+    // Show share link to coordinator
+    data.shareVotelinkDialog = true
 }
 </script>
 

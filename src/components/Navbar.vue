@@ -1,8 +1,8 @@
 <template>
     <div class="d-flex justify-space-between align-center w-100" style="height: 50px; background-color: #3f51b5;">
         <div class="d-flex justify-start align-center">
-            <div class="mx-2 text-white"><b @click="navigateTo('')">Star Voting</b></div>
-            <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('votes')">Votes</v-btn>
+            <div class="mx-2 text-white text-button"><b @click="navigateTo('')">Star Voting</b></div>
+            <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('addvote')">Votes</v-btn>
             <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('roadmap')">Roadmap</v-btn>
         </div>
         <div class="d-flex justify-start align-center">
@@ -46,6 +46,7 @@ const beautifyAddress = (): string => {
 
 const toggleTheme = () => {
     theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+    console.log(theme.global.current.value.colors)
 }
 
 const navigateTo = (prefix: string) => {

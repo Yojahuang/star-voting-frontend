@@ -8,7 +8,7 @@
 
         <div class="my-4">{{ payload.description }}</div>
 
-        <div v-show="payload.revealRealtimeResult" class="mx-auto my-4" style="width: 600px;height:400px;" id="echart">
+        <div v-show="info.showRealtimeResult" class="mx-auto my-4" style="width: 600px;height:400px;" id="echart">
         </div>
 
         <div class="font-weight-thin">Your remaining votes: <p class="font-weight-bold d-inline"
@@ -32,7 +32,7 @@
         <v-divider></v-divider>
 
         <div class="d-flex my-4">
-            <v-btn class="mx-2" @click="joinVote()">Join the vote</v-btn>
+            <v-btn class="mx-2" prepend-icon="mdi-account-plus" @click="joinVote()">Join the vote</v-btn>
             <v-btn class="mx-2" @click="sendVote()">Vote</v-btn>
             <v-btn class="mx-2" prepend-icon="mdi-share-variant">Share</v-btn>
         </div>
@@ -47,20 +47,28 @@ import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
 import { Identity } from "@semaphore-protocol/identity"
 
+const getInfo = (idx: number) => {
+    if (idx == 1) {
+        return { "showRealtimeResult": false, "payload": "U2FsdGVkX1+b9AFCIZJwLrkxxnJpwVRQZP2CXRWr2QSPzSRQU0R1UvSNncEtPaCsJThwvVc4tqBhjtLoegR5xq3TKT+HBqA9hlGdAIRBBQj6Rhhl/O4uKAEyyKI55g1+UktqtCOqTcj4ca+n/tuhtBx2FjkjSdbXF86DR8aKJPfQVjOeTY4kR8+yNoZhS3X3EXX52Fn0yBJdHGBUGEyEaBjsj/jPxEnrJ3OBkJ75PeM=" }
+    }
+    return { "showRealtimeResult": true, "payload": "U2FsdGVkX1/p5sRygz407W6m6gvcLGsaCmQT1c3vh2QsWA/+E7K1ZhhOvnl+hC7NJ5v0Tcq11Pd5SUJJU0hnWFPvndBG56pvuW8lv0ufXTDIJmJ9EhgVgs0PWFT4ayzNxGJf471naD8tmD10xMSRew==" }
+}
+
 const passcodeDialog = ref(true)
 
-const info: any = { "useQuadratic": false, "options": 2, "payload": "U2FsdGVkX18+gVJVZU1h7MDW6xDofBw8lVd+NfzazaCnHnd0G1Zo/03e98mXQ8H4ysZRr+btNMMhRI/5ns5R/wAGa0gRXcGtEUlBUZsZ8tDkORoUN3HS1usn08N8M1kloGqYoIKFCJjZH5FvuOpWsQsh/dMQkHfdEhmVLXn9tjURDMlI2PN9O7N906VWCxDk0Karhn4Y8IhevI1+gido8KZ5DLiXXFkGia0h6e7YLt8=" }
 const passcode = ref("t031")
 
 const route = useRoute()
 const routeId = route.params.id
+
+const info: any = getInfo(Number(routeId))
 
 const payload = ref({
     title: "",
     description: "",
     voteCount: 0,
     options: [],
-    revealRealtimeResult: false,
+    useQuadratic: false,
 })
 const vote = ref<number[]>([])
 
@@ -89,12 +97,14 @@ const sendVote = () => {
 
 const parseRealtimeResult = (): number[] => {
     const result: number[] = []
-    if (payload.value.revealRealtimeResult == false) {
-        for (let i = 0; i < info.options; i++) result.push(0)
-        return result
+    if (info.showRealtimeResult == true) {
+        for (let i = 0; i < payload.value.options.length; i++) result.push(10)
+    } else {
+        for (let i = 0; i < payload.value.options.length; i++) result.push(0)
     }
 
     // the code of parsing realtime result from blockchain
+    console.log(result)
     return result
 }
 
@@ -110,8 +120,8 @@ const setupChart = () => {
         },
         series: [
             {
-                data: parseRealtimeResult,
-                type: 'bar'
+                data: parseRealtimeResult(),
+                type: 'bar',
             }
         ]
     };
@@ -146,7 +156,7 @@ const calculateRemainVote = () => {
 
 const remainVoteFontColor = () => {
     if (calculateRemainVote() >= 0) {
-        return 'white'
+        return 'green'
     } else {
         return 'red'
     }
@@ -160,11 +170,13 @@ const decrypt = () => {
         console.log(info.payload.description)
         console.log(info.payload.options)
         console.log(info.payload.voteCount)
-        console.log(info.payload.revealRealtimeResult)
+        console.log(info.payload.useQuadratic)
 
         payload.value = info.payload
 
         for (let i = 0; i < info.options; ++i) vote.value.push(0)
+
+        console.log(info.payload)
     } catch (error) {
         alert('Passcode is wrong!')
         console.log(error)
