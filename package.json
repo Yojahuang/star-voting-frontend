@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev-host": "vite --host"
   },
   "dependencies": {
-    "@vuepic/vue-datepicker": "^4.4.0",
+    "@semaphore-protocol/identity": "^3.7.0",
+    "crypto-js": "^4.1.1",
     "ethers": "5.7",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@mdi/font": "^7.2.96",
+    "@types/crypto-js": "^4.1.1",
     "@vitejs/plugin-vue": "^4.1.0",
     "typescript": "^4.9.3",
     "vite": "^4.2.0",

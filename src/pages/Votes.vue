@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import router from '@/router/index'
-import { type } from 'os';
 
 const votes = [
     {

@@ -7,11 +7,6 @@
         <div class="form-title my-4">Description</div>
         <v-textarea hide-details="auto" v-model="description" label="Description"></v-textarea>
 
-        <div v-if="hasDeadline">
-            <div class="form-title my-4">End at</div>
-            <VueDatePicker v-model="date" text-input :dark="theme.global.current.value.dark" />
-        </div>
-
         <div class="form-title my-4">Options</div>
         <template v-for="(option, index) in options">
             <v-text-field hide-details="auto" v-model="options[index]" label="Option">
@@ -27,27 +22,25 @@
         </v-text-field>
 
         <div class="form-title my-4">Settings</div>
-        <v-checkbox v-model="hasDeadline" hide-details="auto" label="Closed vote on a fixed date"></v-checkbox>
-        <v-checkbox v-model="privacyMode" hide-details="auto" label="Privacy mode"></v-checkbox>
+        <v-checkbox hide-details="auto" v-model="useQuadratic" label="Use quadratic voting"></v-checkbox>
+        <v-text-field hide-details="auto" v-model="voteCount" label="How many votes each people should have"></v-text-field>
+        <v-text-field hide-details="auto" v-model="passcode" label="Passcode"></v-text-field>
 
-        <v-btn class="w-100 my-4" color="primary">Create</v-btn>
+        <v-btn class="w-100 my-4" @click="createVote" color="primary">Create</v-btn>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue"
-import VueDatePicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import { useTheme } from "vuetify"
+import AES from 'crypto-js/aes';
 
-const theme = useTheme()
 const title = ref("")
 const description = ref("")
-const options = ref<string[]>(["Yes"])
+const options = ref<string[]>([])
 const newOption = ref("")
-const date = ref()
-const hasDeadline = ref(true)
-const privacyMode = ref(false)
+const useQuadratic = ref(false)
+const passcode = ref("")
+const voteCount = ref(1)
 
 const addOption = () => {
     if (newOption.value != "")
@@ -57,6 +50,27 @@ const addOption = () => {
 
 const removeOption = (idx: number) => {
     options.value.splice(idx, 1)
+}
+
+const createVote = () => {
+    const payload: any = {
+        title: title.value,
+        description: description.value,
+        options: options.value,
+        voteCount: voteCount.value
+    }
+
+    const payloadCiphertext = AES.encrypt(JSON.stringify(payload), passcode.value).toString()
+
+    const result = {
+        useQuadratic: useQuadratic.value,
+        options: options.value.length,
+        payload: payloadCiphertext,
+    }
+
+    console.log(JSON.stringify(result))
+
+    // Upload result to smart contract!
 }
 </script>
 
