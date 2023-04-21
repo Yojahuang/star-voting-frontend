@@ -30,7 +30,8 @@
         <v-divider></v-divider>
 
         <div class="d-flex my-4">
-            <v-btn class="mx-2">Vote</v-btn>
+            <v-btn class="mx-2" @click="joinVote()">Join the vote</v-btn>
+            <v-btn class="mx-2" @click="sendVote()">Vote</v-btn>
             <v-btn class="mx-2" prepend-icon="mdi-share-variant">Share</v-btn>
         </div>
     </div>
@@ -42,11 +43,45 @@ import { ref, onMounted } from "vue"
 import AES from 'crypto-js/aes';
 import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
+import { Identity } from "@semaphore-protocol/identity"
+
+const passcodeDialog = ref(true)
+
+const info: any = { "useQuadratic": false, "options": 2, "payload": "U2FsdGVkX18zCE3PhtIG0wP18pfeXczVljVgLEoUBx+4xlQr1v93i5FyJpZaHszTGwhHq53iTEMFHle/TCd2y1KJQFkfZUdOOVVChO7DHPu5zYSiPZFNv6yO9Bjqynd5TZUvgCHOz8VXgcbJWbug0z7qipAzqYRzX+F9pmcRnuyZPVJMg1HOjgHqugWOr9+CyoC+pGXIezr3GtviRS4q/Q==" }
+const passcode = ref("t031")
+
+const route = useRoute()
+const routeId = route.params.id
+
+const payload = ref({
+    title: "",
+    description: "",
+    voteCount: 0,
+    options: []
+})
+const vote = ref<number[]>([])
 
 const hasDecrypted = () => {
     const checklist = [info.payload.title, info.payload.description, info.payload.options, info.payload.voteCount]
     for (let i = 0; i < checklist.length; ++i) if (checklist[i] == undefined) return false
     return true
+}
+
+const joinVote = () => {
+    const identity = new Identity()
+    const { trapdoor, nullifier, commitment } = identity
+    // Send commitment to smart contract to join the group!
+    localStorage.setItem("identity", identity.toString())
+}
+
+const sendVote = () => {
+    const identityStr = localStorage.getItem("identity")
+    if (identityStr == undefined) return
+
+    localStorage.removeItem("identity")
+
+
+    const identify = new Identity(identityStr)
 }
 
 const setupChart = () => {
@@ -69,22 +104,6 @@ const setupChart = () => {
 
     myChart.setOption(option)
 }
-
-const passcodeDialog = ref(true)
-
-const info: any = { "useQuadratic": false, "options": 2, "payload": "U2FsdGVkX18zCE3PhtIG0wP18pfeXczVljVgLEoUBx+4xlQr1v93i5FyJpZaHszTGwhHq53iTEMFHle/TCd2y1KJQFkfZUdOOVVChO7DHPu5zYSiPZFNv6yO9Bjqynd5TZUvgCHOz8VXgcbJWbug0z7qipAzqYRzX+F9pmcRnuyZPVJMg1HOjgHqugWOr9+CyoC+pGXIezr3GtviRS4q/Q==" }
-const passcode = ref("t031")
-
-const route = useRoute()
-const routeId = route.params.id
-
-const payload = ref({
-    title: "",
-    description: "",
-    voteCount: 0,
-    options: []
-})
-const vote = ref<number[]>([])
 
 const decreaseVote = (index: number) => {
     vote.value[index]--
