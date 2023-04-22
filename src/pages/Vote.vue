@@ -4,6 +4,10 @@
 
         <div class="mx-4 my-4">{{ payload.description }}</div>
 
+        <v-progress-linear v-model="getStatePercentage" color="blue-grey" height="25">
+            <strong>{{ stateEnum[pollInfoOnChain.state] }}</strong>
+        </v-progress-linear>
+
         <div v-show="pollInfo.showRealtimeResult" class="mx-auto mx-4 my-4" style="width: 600px; height: 400px" id="echart">
         </div>
 
@@ -127,6 +131,11 @@ const inMemberGroup = async () => {
 const pollInfoOnChain = reactive({
     ownerAddress: '',
     state: 0,
+})
+
+const getStatePercentage = computed(() => {
+    const answer = [33, 66, 100]
+    return answer[pollInfoOnChain.state]
 })
 
 const getStateFromBlockchain = async () => {
@@ -270,6 +279,8 @@ const startPoll = async () => {
 
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     disableCount.value = disableCount.value - 1
+
+    disabledState.joinVote = true
 }
 
 const endPoll = async () => {
