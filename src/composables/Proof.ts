@@ -1,4 +1,4 @@
-import { groth16 } from "snarkjs";
+import * as snarkjs from "../assets/snarkjs.js";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Hexable, zeroPad } from "@ethersproject/bytes";
 import { Group } from "@semaphore-protocol/group";
@@ -37,7 +37,7 @@ function hash(message: BytesLike | Hexable | number | bigint): bigint {
     return BigInt(keccak256(message)) >> BigInt(8)
 }
 
-export default async function generateProof(
+export async function generateProof(
     { trapdoor, nullifier, commitment }: Identity,
     groupOrMerkleProof: Group | MerkleProof,
     externalNullifier: BytesLike | Hexable | number | bigint,
@@ -65,7 +65,7 @@ export default async function generateProof(
         }
     }
 
-    const { proof, publicSignals } = await groth16.fullProve(
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
         {
             identityTrapdoor: trapdoor,
             identityNullifier: nullifier,

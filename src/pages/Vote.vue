@@ -50,26 +50,27 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { ethers } from "ethers"
-import { ref, reactive } from "vue"
+import { ref, reactive, onMounted } from "vue"
+import { storeToRefs } from 'pinia';
+import * as eccryptoJS from 'eccrypto-js';
+import { Buffer } from 'buffer';
+import { useGlobalStore } from '@/stores/Global';
+
 import AES from 'crypto-js/aes';
 import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
+
+// ZK Dependencies
+import { ethers } from "ethers"
 import { Identity } from "@semaphore-protocol/identity"
 import { Group } from "@semaphore-protocol/group"
+import { FullProof } from "@semaphore-protocol/proof";
+import { generateProof } from "@/composables/Proof"
 
 import StarVotingContract from "@/composables/StarVoting"
 import BrowserWallet from "@/composables/wallet"
 import { getGroupMembers } from '@/composables/Group'
 
-import { useGlobalStore } from '@/stores/Global';
-
-import * as eccryptoJS from 'eccrypto-js';
-import { Buffer } from 'buffer';
-
-
-import { onMounted } from 'vue';
-import { storeToRefs } from 'pinia';
 
 const voteRules = [(value: string) => {
     console.log(vote.value)
@@ -155,16 +156,31 @@ const castVote = async() => {
     const identityStr = localStorage.getItem("identity")
     if (identityStr == undefined) return
 
-    console.log("Casting vote")
-    const identify = new Identity(identityStr)
-
+    console.log("[/] Casting vote")
     // Fetch group members to rebuild merkle tree
     const globalStore = useGlobalStore()
     const { selectedChain } = storeToRefs(globalStore)
 
+    const identity = new Identity(identityStr)
+    const group = new Group(pollId.toString(), StarVotingContract.merkleTreeDepth)
+
     const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
     console.log(memberInGroup)
 
+    group.addMembers(memberInGroup)
+    
+    const data = "937ee12277092e3b340a74423bce8d7167e9e41a"
+
+    let fullProof: FullProof
+    fullProof = await generateProof(identity, group, pollId, Buffer.from(data))
+
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+
+    console.log(pollId)
+    console.log(typeof(pollId))
+
+    await StarVoting.castVote(data, fullProof.externalNullifier, pollId, fullProof.proof);
 
     // Remove the identity from local storage
     // localStorage.removeItem("identity")

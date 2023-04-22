@@ -1,5 +1,5 @@
 import fs from "fs";
-import config from './rollup.iife.config';
+import config from './rollup.iife.config.js';
 import { builtinModules as builtin } from "module";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json"));
