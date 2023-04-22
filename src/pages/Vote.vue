@@ -1,7 +1,7 @@
 <template>
     <div class="mx-auto w-75">
         <div v-if="passcodeDialog">
-            <v-text-field autofocus v-model="passcode" @keyup.enter="decrypt" label="Passcode"></v-text-field>
+            <v-text-field autofocus v-model="passcode" @keyup.enter="decryptPollDetail" label="Passcode"></v-text-field>
         </div>
     </div>
 
@@ -35,16 +35,16 @@
 
         <div class="d-flex mx-4 my-4">
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="stateEnum[voteInfoOnChain.state] != 'Created'"
-                @click="joinVote()">Join
+                @click="joinPoll()">Join
                 the vote</v-btn>
             <v-btn class="mx-2" :disabled="stateEnum[voteInfoOnChain.state] != 'Ongoing'" @click="castVote()">Vote</v-btn>
             <v-btn class="mx-2"
                 v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Created'"
-                @click="startVote()" prepend-icon="mdi-toggle-switch">Start
+                @click="startPoll()" prepend-icon="mdi-toggle-switch">Start
                 Vote</v-btn>
             <v-btn class="mx-2"
                 v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Ongoing'"
-                @click="endVote()" prepend-icon="mdi-toggle-switch">End
+                @click="endPoll()" prepend-icon="mdi-toggle-switch">End
                 Vote</v-btn>
         </div>
     </v-card>
@@ -140,13 +140,13 @@ const payload = ref({
     options: [],
     useQuadratic: false,
 })
+
 const vote = ref<number[]>([])
 
 const castVote = async () => {
     const identityStr = localStorage.getItem("identity")
     if (identityStr == undefined) return
 
-    console.log("[/] Casting vote")
     // Fetch group members to rebuild merkle tree
     const globalStore = useGlobalStore()
     const { selectedChain } = storeToRefs(globalStore)
@@ -159,7 +159,7 @@ const castVote = async () => {
 
     group.addMembers(memberInGroup)
 
-    //const data = "937ee12277092e3b340a74423bce8d7167e9e41a"
+    // TODO: Casting vote data and encrypt it
     const data = "123123"
     let fullProof: FullProof
     fullProof = await generateProof(
@@ -181,11 +181,11 @@ const castVote = async () => {
     // localStorage.removeItem("identity")
 }
 
-const endVote = async () => {
+const endPoll = async () => {
 
 }
 
-const startVote = async () => {
+const startPoll = async () => {
     const keyPair = eccryptoJS.generateKeyPair();
 
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
@@ -200,7 +200,7 @@ const startVote = async () => {
     await StarVoting.startPoll(pollId, publicKeyBase64)
 }
 
-const joinVote = async () => {
+const joinPoll = async () => {
     const identity = new Identity()
     const { trapdoor, nullifier, commitment } = identity
     // Send commitment to smart contract to join the group!
@@ -283,7 +283,7 @@ const remainVoteFontColor = () => {
     }
 }
 
-const decrypt = () => {
+const decryptPollDetail = () => {
     console.log(info)
     const bytePayload = AES.decrypt(info.payload, passcode.value)
     try {
