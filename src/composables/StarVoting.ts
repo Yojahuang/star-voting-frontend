@@ -60,6 +60,11 @@ export default class StarVotingContract {
         return encryptedPollInfo
     }
 
+    waitTx = async (tx: any) => {
+        const receipt = await tx.wait()
+        console.log(receipt)
+    }
+
     createPoll = async (
         pollId: BigInt,
         livePoll: boolean,
@@ -75,7 +80,7 @@ export default class StarVotingContract {
 
         if (signer == null || this.starVotingContract == undefined) return
 
-        await this.starVotingContract
+        const tx = await this.starVotingContract
             .connect(signer)
             .createPoll(
                 pollId,
@@ -86,6 +91,7 @@ export default class StarVotingContract {
                 encryptedInfo,
                 this.option
             )
+        await this.waitTx(tx)
     }
 
     getPollCoordinator = async (pollId: BigInt) => {
@@ -107,9 +113,11 @@ export default class StarVotingContract {
 
         if (this.starVotingContract == undefined) return
 
-        await this.starVotingContract
+        const tx = await this.starVotingContract
             .connect(signer)
             .addVoter(pollId, commitment, this.option)
+
+        await this.waitTx(tx)
     }
 
     startPoll = async (pollId: BigInt, encryptionKey: string) => {
@@ -119,9 +127,11 @@ export default class StarVotingContract {
 
         if (this.starVotingContract == undefined) return
 
-        await this.starVotingContract
+        const tx = await this.starVotingContract
             .connect(signer)
             .startPoll(pollId, encryptionKey, this.option)
+
+        await this.waitTx(tx)
     }
 
     endPoll = async (pollId: BigInt, decryptionKey: string) => {
@@ -131,9 +141,10 @@ export default class StarVotingContract {
 
         if (this.starVotingContract == undefined) return
 
-        await this.starVotingContract
+        const tx = await this.starVotingContract
             .connect(signer)
             .endPoll(pollId, decryptionKey, this.option)
+        await this.waitTx(tx)
     }
 
     castVote = async (
@@ -151,7 +162,6 @@ export default class StarVotingContract {
         const tx = await this.starVotingContract
             .connect(signer)
             .castVote(vote, nullifierHash, pollId, proof, this.option)
-        const receipt = await tx.wait()
-        console.log(receipt)
+        await this.waitTx(tx)
     }
 }

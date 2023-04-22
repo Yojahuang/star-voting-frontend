@@ -160,31 +160,14 @@ const createVote = async () => {
 
     const uuidBigNumber = BigInt("0x" + data.pollUuid)
 
+    shouldBeDisabled.value = true
     // Upload result to smart contract!
     const StarVoting = new StarVotingContract()
     StarVoting.init()
     await StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, !data.publicVote, JSON.stringify(voteData))
 
-    const contract = StarVoting.starVotingContract
-
-    if (contract == null) {
-        return;
-    }
-
-    shouldBeDisabled.value = true
-
-    const timer = setInterval(async () => {
-        const events: any = await getEvents(selectedChain.value, "PollCreated")
-        console.log(events)
-        for (let i = 0; i < events.length; ++i) {
-            const pollId = events[i].pollId
-            if (uuidBigNumber.toString() == pollId) {
-                shouldBeDisabled.value = false
-                data.shareVotelinkDialog = true
-                data.voteLink = window.location.origin + `/vote/${data.pollUuid}/${data.passcode}`
-                clearInterval(timer);
-            }
-        }
-    }, 3000);
+    shouldBeDisabled.value = false
+    data.shareVotelinkDialog = true
+    data.voteLink = window.location.origin + `/vote/${data.pollUuid}/${data.passcode}`
 }
 </script>

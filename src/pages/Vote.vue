@@ -33,7 +33,7 @@
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="disabledState.joinVote" @click="joinPoll()">Join
                 the
                 vote</v-btn>
-            <v-btn class="mx-2" :disabled="stateEnum[pollInfoOnChain.state] != 'Ongoing'" @click="castVote()">Vote</v-btn>
+            <v-btn class="mx-2" :disabled="disabledState.voteTextfield" @click="castVote()">Vote</v-btn>
             <v-btn class="mx-2" v-if="
                 browserWallet.getAddress() ==
                 pollInfoOnChain.ownerAddress &&
@@ -161,6 +161,9 @@ const passcode: string = (route.params.passcode) as any
 
 let pollInfo: any = {}
 
+const globalStore = useGlobalStore()
+const { selectedChain } = storeToRefs(globalStore)
+
 const getInfo = async () => {
     pollInfo = await getInfoFromBlockchain()
     pollInfo = JSON.parse(pollInfo)
@@ -195,9 +198,6 @@ const castVote = async () => {
     if (identityStr == undefined) return
 
     // Fetch group members to rebuild merkle tree
-    const globalStore = useGlobalStore()
-    const { selectedChain } = storeToRefs(globalStore)
-
     const identity = new Identity(identityStr)
     const group = new Group(
         pollId.toString(),
@@ -248,6 +248,7 @@ const castVote = async () => {
 
     // Remove the identity from local storage
     // localStorage.removeItem("identity")
+    disabledState.voteTextfield = true
     disableCount.value = disableCount.value - 1
 }
 
@@ -267,16 +268,20 @@ const startPoll = async () => {
 
     await StarVoting.startPoll(pollId, publicKeyBase64)
 
+    pollInfoOnChain.state = pollInfoOnChain.state + 1
     disableCount.value = disableCount.value - 1
 }
 
 const endPoll = async () => {
+    disableCount.value = disableCount.value + 1
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
     const privateKeyBase64 = localStorage.getItem('privateKey') || ''
 
+    pollInfoOnChain.state = pollInfoOnChain.state + 1
     await StarVoting.endPoll(pollId, privateKeyBase64)
+    disableCount.value = disableCount.value - 1
 }
 
 const joinPoll = async () => {
@@ -291,7 +296,7 @@ const joinPoll = async () => {
     StarVoting.init()
 
     await StarVoting.addVoter(pollId, commitment)
-
+    disabledState.joinVote = true
     disableCount.value = disableCount.value - 1
 }
 
