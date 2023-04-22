@@ -1,40 +1,82 @@
 <template>
     <div class="mx-4">
-
         <div class="form-title my-4">Title</div>
-        <v-text-field hide-details="auto" v-model="data.title" label="Title"></v-text-field>
+        <v-text-field
+            hide-details="auto"
+            v-model="data.title"
+            label="Title"
+        ></v-text-field>
 
         <div class="form-title my-4">Description</div>
-        <v-textarea hide-details="auto" v-model="data.description" label="Description"></v-textarea>
+        <v-textarea
+            hide-details="auto"
+            v-model="data.description"
+            label="Description"
+        ></v-textarea>
 
         <div class="form-title my-4">Options</div>
         <template v-for="(option, index) in data.options">
-            <v-text-field hide-details="auto" v-model="data.options[index]" label="Option">
+            <v-text-field
+                hide-details="auto"
+                v-model="data.options[index]"
+                label="Option"
+            >
                 <template #append-inner>
-                    <v-icon @click="removeOption(index)" icon="mdi-trash-can"></v-icon>
+                    <v-icon
+                        @click="removeOption(index)"
+                        icon="mdi-trash-can"
+                    ></v-icon>
                 </template>
             </v-text-field>
         </template>
-        <v-text-field hide-details="auto" @keydown.enter="addOption()" v-model="data.newOption" label="Add option">
+        <v-text-field
+            hide-details="auto"
+            @keydown.enter="addOption()"
+            v-model="data.newOption"
+            label="Add option"
+        >
             <template #append-inner>
                 <v-icon @click="addOption()" icon="mdi-plus"></v-icon>
             </template>
         </v-text-field>
 
         <div class="form-title my-4">Settings</div>
-        <v-checkbox hide-details="auto" v-model="data.useQuadratic" label="Use quadratic voting"></v-checkbox>
-        <v-checkbox hide-details="auto" v-model="data.showRealtimeResult" label="Show realtime result"></v-checkbox>
-        <v-checkbox class="mb-2"
-            :messages="data.publicVote ? '' : 'If you make the vote private, you\'ll have to collect commitments by yourself'"
-            v-model="data.publicVote" label="Make the vote public">
+        <v-checkbox
+            hide-details="auto"
+            v-model="data.useQuadratic"
+            label="Use quadratic voting"
+        ></v-checkbox>
+        <v-checkbox
+            hide-details="auto"
+            v-model="data.showRealtimeResult"
+            label="Show realtime result"
+        ></v-checkbox>
+        <v-checkbox
+            class="mb-2"
+            :messages="
+                data.publicVote
+                    ? ''
+                    : 'If you make the vote private, you\'ll have to collect commitments by yourself'
+            "
+            v-model="data.publicVote"
+            label="Make the vote public"
+        >
         </v-checkbox>
 
-        <v-text-field hide-details="auto" v-model="data.voteCount"
-            label="How many votes each people should have"></v-text-field>
-        <v-text-field hide-details="auto" v-model="data.passcode"
-            label="Passcode, please make sure you don't lose it"></v-text-field>
+        <v-text-field
+            hide-details="auto"
+            v-model="data.voteCount"
+            label="How many votes each people should have"
+        ></v-text-field>
+        <v-text-field
+            hide-details="auto"
+            v-model="data.passcode"
+            label="Passcode, please make sure you don't lose it"
+        ></v-text-field>
 
-        <v-btn class="w-100 my-4" @click="createVote" color="primary">Create</v-btn>
+        <v-btn class="w-100 my-4" @click="createVote" color="primary"
+            >Create</v-btn
+        >
     </div>
 
     <v-dialog v-model="data.shareVotelinkDialog">
@@ -42,8 +84,15 @@
             <v-icon class="mx-auto" icon="mdi-check-bold" size="50"></v-icon>
             Your vote has been created! <br />
             <div class="d-flex align-center w-100 justify-center">
-                <v-text-field @click="copyLink()" v-model="data.voteLink"></v-text-field>
-                <v-btn variant="text" @click="copyLink()" icon="mdi-content-copy"></v-btn>
+                <v-text-field
+                    @click="copyLink()"
+                    v-model="data.voteLink"
+                ></v-text-field>
+                <v-btn
+                    variant="text"
+                    @click="copyLink()"
+                    icon="mdi-content-copy"
+                ></v-btn>
             </div>
         </v-card>
     </v-dialog>
@@ -51,7 +100,11 @@
     <v-snackbar color="error" v-model="snackbarData.show">
         {{ snackbarData.msg }}
         <template v-slot:actions>
-            <v-btn class="text-white" variant="text" @click="snackbarData.show = false">
+            <v-btn
+                class="text-white"
+                variant="text"
+                @click="snackbarData.show = false"
+            >
                 Close
             </v-btn>
         </template>
@@ -61,7 +114,11 @@
         Link copied!
 
         <template v-slot:actions>
-            <v-btn class="text-white" variant="text" @click="data.snackbar = false">
+            <v-btn
+                class="text-white"
+                variant="text"
+                @click="data.snackbar = false"
+            >
                 Close
             </v-btn>
         </template>
@@ -69,39 +126,38 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue"
-import AES from 'crypto-js/aes';
-import { v4 as uuidv4 } from 'uuid';
-import { ethers } from "ethers"
-import StarVotingContract from "@/composables/StarVoting"
-import { useGlobalStore } from "@/stores/Global";
-import { storeToRefs } from "pinia";
+import { reactive } from 'vue'
+import AES from 'crypto-js/aes'
+import { v4 as uuidv4 } from 'uuid'
+import { ethers } from 'ethers'
+import StarVotingContract from '@/composables/StarVoting'
+import { useGlobalStore } from '@/stores/Global'
+import { storeToRefs } from 'pinia'
 
-import { getEvents } from "@/composables/plaw";
+import { getEvents } from '@/composables/EtherLog'
 
 const { shouldBeDisabled, selectedChain } = storeToRefs(useGlobalStore())
 
 const data = reactive({
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     options: [] as string[],
-    newOption: "",
+    newOption: '',
     useQuadratic: false,
-    passcode: "",
+    passcode: '',
     voteCount: 1,
     shareVotelinkDialog: false,
-    pollUuid: "",
+    pollUuid: '',
     snackbar: false,
     showRealtimeResult: false,
     publicVote: true,
-    voteLink: ""
+    voteLink: '',
 })
 
 const snackbarData = reactive({
-    msg: "",
+    msg: '',
     show: false,
 })
-
 
 const showSnackbar = (msg: string) => {
     snackbarData.msg = msg
@@ -109,11 +165,9 @@ const showSnackbar = (msg: string) => {
 }
 
 const addOption = () => {
-    if (data.newOption != "")
-        data.options.push(data.newOption)
-    else
-        showSnackbar("Error: Option shouldn't be null")
-    data.newOption = ""
+    if (data.newOption != '') data.options.push(data.newOption)
+    else showSnackbar("Error: Option shouldn't be null")
+    data.newOption = ''
 }
 
 const removeOption = (idx: number) => {
@@ -128,7 +182,7 @@ const copyLink = async () => {
 const createVote = async () => {
     const voteData: any = {
         showRealtimeResult: data.showRealtimeResult,
-        payload: {}
+        payload: {},
     }
     const payload: any = {
         title: data.title,
@@ -138,45 +192,54 @@ const createVote = async () => {
         useQuadratic: data.useQuadratic,
     }
 
-    const payloadCiphertext = AES.encrypt(JSON.stringify(payload), data.passcode).toString()
+    const payloadCiphertext = AES.encrypt(
+        JSON.stringify(payload),
+        data.passcode
+    ).toString()
 
     voteData.payload = payloadCiphertext
 
     console.log(JSON.stringify(voteData))
 
     const uuid = uuidv4()
-    let utf8Encode = new TextEncoder();
+    let utf8Encode = new TextEncoder()
 
-    data.pollUuid = (ethers.utils.keccak256(utf8Encode.encode(uuid))).slice(2)
+    data.pollUuid = ethers.utils.keccak256(utf8Encode.encode(uuid)).slice(2)
 
-    const uuidBigNumber = BigInt("0x" + data.pollUuid)
+    const uuidBigNumber = BigInt('0x' + data.pollUuid)
 
     // Upload result to smart contract!
     const StarVoting = new StarVotingContract()
     StarVoting.init()
-    await StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, !data.publicVote, JSON.stringify(voteData))
+    await StarVoting.createPoll(
+        uuidBigNumber,
+        data.showRealtimeResult,
+        !data.publicVote,
+        JSON.stringify(voteData)
+    )
 
     const contract = StarVoting.starVotingContract
 
     if (contract == null) {
-        return;
+        return
     }
 
     shouldBeDisabled.value = true
 
     const timer = setInterval(async () => {
-        const events: any = await getEvents(selectedChain.value, "PollCreated")
+        const events: any = await getEvents(selectedChain.value, 'PollCreated')
         console.log(events)
         for (let i = 0; i < events.length; ++i) {
             const pollId = events[i].pollId
             if (uuidBigNumber.toString() == pollId) {
                 shouldBeDisabled.value = false
                 data.shareVotelinkDialog = true
-                data.voteLink = window.location.origin + `/vote/${data.pollUuid}`
-                clearInterval(timer);
+                data.voteLink =
+                    window.location.origin + `/vote/${data.pollUuid}`
+                clearInterval(timer)
             }
         }
-    }, 3000);
+    }, 3000)
 }
 </script>
 

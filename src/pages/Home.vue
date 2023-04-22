@@ -1,5 +1,4 @@
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <template>
     <div class="mx-auto w-75">
@@ -22,15 +21,24 @@
             </div>
         </div>
         <div class="d-flex align-center justify-space-between my-2">
-            <div class="mx-2 landing-card">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Autem, facere maxime
-                illum iure reprehenderit eum hic soluta nemo, repellendus, enim quis nisi consectetur veniam optio ad
-                quisquam vel unde veritatis!</div>
-            <div class="mx-2 landing-card">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Autem, facere maxime
-                illum iure reprehenderit eum hic soluta nemo, repellendus, enim quis nisi consectetur veniam optio ad
-                quisquam vel unde veritatis!</div>
-            <div class="mx-2 landing-card">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Autem, facere maxime
-                illum iure reprehenderit eum hic soluta nemo, repellendus, enim quis nisi consectetur veniam optio ad
-                quisquam vel unde veritatis!</div>
+            <div class="mx-2 landing-card">
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Autem,
+                facere maxime illum iure reprehenderit eum hic soluta nemo,
+                repellendus, enim quis nisi consectetur veniam optio ad quisquam
+                vel unde veritatis!
+            </div>
+            <div class="mx-2 landing-card">
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Autem,
+                facere maxime illum iure reprehenderit eum hic soluta nemo,
+                repellendus, enim quis nisi consectetur veniam optio ad quisquam
+                vel unde veritatis!
+            </div>
+            <div class="mx-2 landing-card">
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Autem,
+                facere maxime illum iure reprehenderit eum hic soluta nemo,
+                repellendus, enim quis nisi consectetur veniam optio ad quisquam
+                vel unde veritatis!
+            </div>
         </div>
     </div>
 </template>

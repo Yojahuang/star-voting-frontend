@@ -1,10 +1,10 @@
-import { BigNumberish, ethers } from "ethers"
-import contractABI from "@/assets/StarVoting.json"
-import BrowserWallet from "@/composables/wallet"
+import { BigNumberish, ethers } from 'ethers'
+import contractABI from '@/assets/StarVoting.json'
+import BrowserWallet from '@/composables/wallet'
 
 export default class StarVotingContract {
     static merkleTreeDepth = 20
-    address = "0xAC3d9886750b7Ac602E0900aAb13F597910F4700"
+    address = '0xAC3d9886750b7Ac602E0900aAb13F597910F4700'
     starVotingContract: ethers.Contract | undefined = undefined
     option = { gasLimit: 20_000_000 }
 
@@ -13,7 +13,11 @@ export default class StarVotingContract {
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
 
         if (provider != null)
-            this.starVotingContract = new ethers.Contract(this.address, contractABI, provider)
+            this.starVotingContract = new ethers.Contract(
+                this.address,
+                contractABI,
+                provider
+            )
     }
 
     getEncryptedPollInfo = async (pollId: BigInt) => {
@@ -21,9 +25,8 @@ export default class StarVotingContract {
 
         let encryptedPollInfo
         try {
-            encryptedPollInfo = await this.starVotingContract.getEncryptedPollInfo(
-                pollId
-            );
+            encryptedPollInfo =
+                await this.starVotingContract.getEncryptedPollInfo(pollId)
         } catch (error) {
             console.log(error)
         }
@@ -31,7 +34,12 @@ export default class StarVotingContract {
         return encryptedPollInfo
     }
 
-    createPoll = async (pollId: BigInt, livePoll: boolean, isPrivate: boolean, encryptedInfo: string) => {
+    createPoll = async (
+        pollId: BigInt,
+        livePoll: boolean,
+        isPrivate: boolean,
+        encryptedInfo: string
+    ) => {
         const ethereum = (window as any).ethereum
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
         const signer = provider.getSigner()
@@ -41,7 +49,17 @@ export default class StarVotingContract {
 
         if (signer == null || this.starVotingContract == undefined) return
 
-        await this.starVotingContract.connect(signer).createPoll(pollId, coordinator, StarVotingContract.merkleTreeDepth, livePoll, isPrivate, encryptedInfo, this.option)
+        await this.starVotingContract
+            .connect(signer)
+            .createPoll(
+                pollId,
+                coordinator,
+                StarVotingContract.merkleTreeDepth,
+                livePoll,
+                isPrivate,
+                encryptedInfo,
+                this.option
+            )
     }
 
     getPollCoordinator = async (pollId: BigInt) => {
@@ -63,7 +81,9 @@ export default class StarVotingContract {
 
         if (this.starVotingContract == undefined) return
 
-        await this.starVotingContract.connect(signer).addVoter(pollId, commitment, this.option)
+        await this.starVotingContract
+            .connect(signer)
+            .addVoter(pollId, commitment, this.option)
     }
 
     startPoll = async (pollId: BigInt, encryptionKey: string) => {
@@ -73,20 +93,26 @@ export default class StarVotingContract {
 
         if (this.starVotingContract == undefined) return
 
-        await this.starVotingContract.connect(signer).startPoll(pollId, encryptionKey, this.option)
+        await this.starVotingContract
+            .connect(signer)
+            .startPoll(pollId, encryptionKey, this.option)
     }
 
-    castVote = async (vote: string,
+    castVote = async (
+        vote: string,
         nullifierHash: BigNumberish,
         pollId: BigNumberish,
-        proof: BigNumberish[]) => {
+        proof: BigNumberish[]
+    ) => {
         const ethereum = (window as any).ethereum
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
         const signer = provider.getSigner()
 
         if (this.starVotingContract == undefined) return
 
-        const tx = await this.starVotingContract.connect(signer).castVote(vote, nullifierHash, pollId, proof, this.option)
+        const tx = await this.starVotingContract
+            .connect(signer)
+            .castVote(vote, nullifierHash, pollId, proof, this.option)
         const receipt = await tx.wait()
         console.log(receipt)
     }

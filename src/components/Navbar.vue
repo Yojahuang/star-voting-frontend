@@ -1,34 +1,76 @@
 <template>
-    <div class="d-flex justify-space-between align-center w-100" style="height: 50px; background-color: #3f51b5;">
+    <div
+        class="d-flex justify-space-between align-center w-100"
+        style="height: 50px; background-color: #3f51b5"
+    >
         <div class="d-flex justify-start align-center">
-            <div class="mx-2 text-white text-button"><b @click="navigateTo('')">Star Voting</b></div>
-            <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('addvote')">Votes</v-btn>
-            <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('roadmap')">Roadmap</v-btn>
+            <div class="mx-2 text-white text-button">
+                <b @click="navigateTo('')">Star Voting</b>
+            </div>
+            <v-btn
+                class="mx-2 text-white"
+                variant="text"
+                @click="navigateTo('addvote')"
+                >Votes</v-btn
+            >
+            <v-btn
+                class="mx-2 text-white"
+                variant="text"
+                @click="navigateTo('roadmap')"
+                >Roadmap</v-btn
+            >
         </div>
         <div class="d-flex justify-start align-center">
-            <v-btn class="mx-2 text-white" @click="toggleTheme()" icon="mdi-theme-light-dark" variant="text"></v-btn>
+            <v-btn
+                class="mx-2 text-white"
+                @click="toggleTheme()"
+                icon="mdi-theme-light-dark"
+                variant="text"
+            ></v-btn>
 
-            <v-select class="mx-2 text-white" v-model="selectedChain"
-                :items="['ThunderCore Testnet', 'Linea Testnet', 'Chiado(Gnosis) testnet']" hide-details="auto"
-                density="comfortable"></v-select>
+            <v-select
+                class="mx-2 text-white"
+                v-model="selectedChain"
+                :items="[
+                    'ThunderCore Testnet',
+                    'Linea Testnet',
+                    'Chiado(Gnosis) testnet',
+                ]"
+                hide-details="auto"
+                density="comfortable"
+            ></v-select>
 
-            <v-chip class="mx-2 text-white" v-if="address != ''">{{ beautifyAddress() }}</v-chip>
-            <v-btn class="mx-2" v-if="address == ''" @click="connectWallet()" variant="outlined"
-                color="secondary">Connect</v-btn>
-            <v-btn class="mx-2" v-if="address != ''" @click="disconnectWallet()" variant="outlined"
-                color="warning">Disconnect</v-btn>
+            <v-chip class="mx-2 text-white" v-if="address != ''">{{
+                beautifyAddress()
+            }}</v-chip>
+            <v-btn
+                class="mx-2"
+                v-if="address == ''"
+                @click="connectWallet()"
+                variant="outlined"
+                color="secondary"
+                >Connect</v-btn
+            >
+            <v-btn
+                class="mx-2"
+                v-if="address != ''"
+                @click="disconnectWallet()"
+                variant="outlined"
+                color="warning"
+                >Disconnect</v-btn
+            >
         </div>
     </div>
     <v-divider class="mb-6"></v-divider>
 </template>
 
 <script setup lang="ts">
-import { useTheme } from "vuetify"
+import { useTheme } from 'vuetify'
 import router from '@/router/index'
-import BrowserWallet from "@/composables/wallet"
-import { useGlobalStore } from "@/stores/Global"
-import { storeToRefs } from "pinia"
-import { onMounted } from "vue"
+import BrowserWallet from '@/composables/wallet'
+import { useGlobalStore } from '@/stores/Global'
+import { storeToRefs } from 'pinia'
+import { onMounted } from 'vue'
 
 const { selectedChain } = storeToRefs(useGlobalStore())
 
@@ -43,10 +85,10 @@ onMounted(() => {
 
 const beautifyAddress = (): string => {
     const addr = address.value
-    if (addr == "") return ""
+    if (addr == '') return ''
 
-    const length = addr.length;
-    return addr.substring(0, 4) + "..." + addr.substring(length - 4, length)
+    const length = addr.length
+    return addr.substring(0, 4) + '...' + addr.substring(length - 4, length)
 }
 
 const toggleTheme = () => {
@@ -65,5 +107,4 @@ const connectWallet = async () => {
 const disconnectWallet = () => {
     wallet.disconnect()
 }
-
 </script>

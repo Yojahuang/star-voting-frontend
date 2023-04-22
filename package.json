@@ -1,40 +1,47 @@
 {
-  "name": "e-voting",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview",
-    "dev-host": "vite --host"
-  },
-  "dependencies": {
-    "@semaphore-protocol/group": "^3.7.0",
-    "@semaphore-protocol/identity": "^3.7.0",
-    "@semaphore-protocol/proof": "^3.7.0",
-    "buffer": "^6.0.3",
-    "crypto-js": "^4.1.1",
-    "eccrypto-js": "^5.4.0",
-    "echarts": "^5.4.2",
-    "ethers": "5.7",
-    "pinia": "^2.0.35",
-    "readline": "^1.3.0",
-    "snarkjs": "^0.6.10",
-    "util": "^0.12.5",
-    "uuid": "^9.0.0",
-    "vue": "^3.2.47",
-    "vue-router": "^4.1.6",
-    "vuetify": "^3.1.14"
-  },
-  "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@mdi/font": "^7.2.96",
-    "@types/crypto-js": "^4.1.1",
-    "@types/uuid": "^9.0.1",
-    "@vitejs/plugin-vue": "^4.1.0",
-    "typescript": "^4.9.3",
-    "vite": "^4.2.0",
-    "vue-tsc": "^1.2.0"
-  }
+    "name": "e-voting",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc && vite build",
+        "preview": "vite preview",
+        "dev-host": "vite --host",
+        "prettier": "npx prettier --write ."
+    },
+    "dependencies": {
+        "@semaphore-protocol/group": "^3.7.0",
+        "@semaphore-protocol/identity": "^3.7.0",
+        "@semaphore-protocol/proof": "^3.7.0",
+        "buffer": "^6.0.3",
+        "crypto-js": "^4.1.1",
+        "eccrypto-js": "^5.4.0",
+        "echarts": "^5.4.2",
+        "ethers": "5.7",
+        "pinia": "^2.0.35",
+        "readline": "^1.3.0",
+        "snarkjs": "^0.6.10",
+        "util": "^0.12.5",
+        "uuid": "^9.0.0",
+        "vue": "^3.2.47",
+        "vue-router": "^4.1.6",
+        "vuetify": "^3.1.14"
+    },
+    "devDependencies": {
+        "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+        "@mdi/font": "^7.2.96",
+        "@types/crypto-js": "^4.1.1",
+        "@types/uuid": "^9.0.1",
+        "@vitejs/plugin-vue": "^4.1.0",
+        "typescript": "^4.9.3",
+        "vite": "^4.2.0",
+        "vue-tsc": "^1.2.0"
+    },
+    "prettier": {
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "semi": false,
+        "singleQuote": true
+    }
 }

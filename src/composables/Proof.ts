@@ -1,17 +1,16 @@
-import * as snarkjs from "../assets/snarkjs.js";
-import { BigNumber } from "@ethersproject/bignumber";
-import { Hexable, zeroPad } from "@ethersproject/bytes";
-import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
+import * as snarkjs from '../assets/snarkjs.js'
+import { BigNumber } from '@ethersproject/bignumber'
+import { Hexable, zeroPad } from '@ethersproject/bytes'
+import { Group } from '@semaphore-protocol/group'
+import { Identity } from '@semaphore-protocol/identity'
 import {
-  FullProof,
-  SnarkArtifacts,
-  SnarkJSProof,
-  Proof,
-} from "@semaphore-protocol/proof";
-import { BytesLike, keccak256 } from "ethers/lib/utils";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-
+    FullProof,
+    SnarkArtifacts,
+    SnarkJSProof,
+    Proof,
+} from '@semaphore-protocol/proof'
+import { BytesLike, keccak256 } from 'ethers/lib/utils'
+import { MerkleProof } from '@zk-kit/incremental-merkle-tree'
 
 function packProof(originalProof: SnarkJSProof): Proof {
     return [
@@ -22,7 +21,7 @@ function packProof(originalProof: SnarkJSProof): Proof {
         originalProof.pi_b[1][1],
         originalProof.pi_b[1][0],
         originalProof.pi_c[0],
-        originalProof.pi_c[1]
+        originalProof.pi_c[1],
     ]
 }
 
@@ -46,11 +45,11 @@ export async function generateProof(
 ): Promise<FullProof> {
     let merkleProof: MerkleProof
 
-    if ("depth" in groupOrMerkleProof) {
+    if ('depth' in groupOrMerkleProof) {
         const index = groupOrMerkleProof.indexOf(commitment)
 
         if (index === -1) {
-            throw new Error("The identity is not part of the group")
+            throw new Error('The identity is not part of the group')
         }
 
         merkleProof = groupOrMerkleProof.generateMerkleProof(index)
@@ -61,7 +60,7 @@ export async function generateProof(
     if (!snarkArtifacts) {
         snarkArtifacts = {
             wasmFilePath: `https://www.trusted-setup-pse.org/semaphore/${merkleProof.siblings.length}/semaphore.wasm`,
-            zkeyFilePath: `https://www.trusted-setup-pse.org/semaphore/${merkleProof.siblings.length}/semaphore.zkey`
+            zkeyFilePath: `https://www.trusted-setup-pse.org/semaphore/${merkleProof.siblings.length}/semaphore.zkey`,
         }
     }
 
@@ -72,7 +71,7 @@ export async function generateProof(
             treePathIndices: merkleProof.pathIndices,
             treeSiblings: merkleProof.siblings,
             externalNullifier: hash(externalNullifier),
-            signalHash: hashBytes(signal)
+            signalHash: hashBytes(signal),
         },
         snarkArtifacts.wasmFilePath,
         snarkArtifacts.zkeyFilePath
@@ -83,6 +82,6 @@ export async function generateProof(
         nullifierHash: publicSignals[1],
         signal: BigNumber.from(signal).toString(),
         externalNullifier: BigNumber.from(externalNullifier).toString(),
-        proof: packProof(proof)
+        proof: packProof(proof),
     }
 }

@@ -8,18 +8,18 @@ let routes = [
     {
         path: '/',
         name: 'Home',
-        component: Home
+        component: Home,
     },
     {
         path: '/vote/:id',
         name: 'Vote',
-        component: Vote
+        component: Vote,
     },
     {
         path: '/addvote',
         name: 'Addvote',
-        component: AddVote
-    }
+        component: AddVote,
+    },
 ]
 
 export default createRouter({ history, routes })
