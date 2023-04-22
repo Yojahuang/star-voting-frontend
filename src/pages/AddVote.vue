@@ -1,116 +1,57 @@
 <template>
     <div class="w-75 mx-auto">
-        <v-card
-            :disabled="shouldBeDisabled"
-            :loading="shouldBeDisabled"
-            max-width="500"
-            class="mx-auto"
-        >
+        <v-card :disabled="shouldBeDisabled" :loading="shouldBeDisabled" max-width="500" class="mx-auto">
             <template #title>
                 <div class="text-lg-h4 font-weight-bold">Create Vote</div>
             </template>
             <v-divider></v-divider>
             <div class="mx-4">
                 <div class="form-title my-4">Title</div>
-                <v-text-field
-                    hide-details="auto"
-                    v-model="data.title"
-                    label="Title"
-                ></v-text-field>
+                <v-text-field hide-details="auto" v-model="data.title" label="Title"></v-text-field>
 
                 <div class="form-title my-4">Description</div>
-                <v-textarea
-                    hide-details="auto"
-                    v-model="data.description"
-                    label="Description"
-                ></v-textarea>
+                <v-textarea hide-details="auto" v-model="data.description" label="Description"></v-textarea>
 
                 <div class="form-title my-4">Options</div>
                 <template v-for="(option, index) in data.options">
-                    <v-text-field
-                        hide-details="auto"
-                        v-model="data.options[index]"
-                        label="Option"
-                    >
+                    <v-text-field hide-details="auto" v-model="data.options[index]" label="Option">
                         <template #append-inner>
-                            <v-icon
-                                @click="removeOption(index)"
-                                icon="mdi-trash-can"
-                            ></v-icon>
+                            <v-icon @click="removeOption(index)" icon="mdi-trash-can"></v-icon>
                         </template>
                     </v-text-field>
                 </template>
-                <v-text-field
-                    hide-details="auto"
-                    @keydown.enter="addOption()"
-                    v-model="data.newOption"
-                    label="Add option"
-                >
+                <v-text-field hide-details="auto" @keydown.enter="addOption()" v-model="data.newOption" label="Add option">
                     <template #append-inner>
                         <v-icon @click="addOption()" icon="mdi-plus"></v-icon>
                     </template>
                 </v-text-field>
 
                 <div class="form-title my-4">Settings</div>
-                <v-checkbox
-                    hide-details="auto"
-                    v-model="data.useQuadratic"
-                    label="Use quadratic voting"
-                ></v-checkbox>
-                <v-checkbox
-                    hide-details="auto"
-                    v-model="data.showRealtimeResult"
-                    label="Show realtime result"
-                ></v-checkbox>
-                <v-checkbox
-                    class="mb-2"
-                    :messages="
-                        data.publicVote
-                            ? ''
-                            : 'If you make the vote private, you\'ll have to collect commitments by yourself'
-                    "
-                    v-model="data.publicVote"
-                    label="Make the vote public"
-                >
+                <v-checkbox hide-details="auto" v-model="data.useQuadratic" label="Use quadratic voting"></v-checkbox>
+                <v-checkbox hide-details="auto" v-model="data.showRealtimeResult" label="Show realtime result"></v-checkbox>
+                <v-checkbox class="mb-2" :messages="data.publicVote
+                        ? ''
+                        : 'If you make the vote private, you\'ll have to collect commitments by yourself'
+                    " v-model="data.publicVote" label="Make the vote public">
                 </v-checkbox>
 
-                <v-text-field
-                    hide-details="auto"
-                    v-model="data.voteCount"
-                    label="How many votes each people should have"
-                ></v-text-field>
-                <v-text-field
-                    hide-details="auto"
-                    v-model="data.passcode"
-                    label="Passcode, please make sure you don't lose it"
-                ></v-text-field>
+                <v-text-field hide-details="auto" v-model="data.voteCount"
+                    label="How many votes each people should have"></v-text-field>
+                <v-text-field hide-details="auto" v-model="data.passcode"
+                    label="Passcode, please make sure you don't lose it"></v-text-field>
 
-                <v-btn class="w-100 my-4" @click="createVote" color="primary"
-                    >Create</v-btn
-                >
+                <v-btn class="w-100 my-4" @click="createVote" color="primary">Create</v-btn>
             </div>
 
             <v-dialog v-model="data.shareVotelinkDialog">
                 <v-card class="mx-auto w-75" max-width="300">
-                    <v-icon
-                        class="mx-auto"
-                        icon="mdi-check-bold"
-                        size="50"
-                    ></v-icon>
+                    <v-icon class="mx-auto" icon="mdi-check-bold" size="50"></v-icon>
                     <div class="text-center">
                         Your vote has been created! <br />
                     </div>
                     <div class="d-flex align-center w-100 justify-center">
-                        <v-text-field
-                            hide-details="auto"
-                            @click="copyLink()"
-                            v-model="data.voteLink"
-                        ></v-text-field>
-                        <v-btn
-                            variant="text"
-                            @click="copyLink()"
-                            icon="mdi-content-copy"
-                        ></v-btn>
+                        <v-text-field hide-details="auto" @click="copyLink()" v-model="data.voteLink"></v-text-field>
+                        <v-btn variant="text" @click="copyLink()" icon="mdi-content-copy"></v-btn>
                     </div>
                 </v-card>
             </v-dialog>
@@ -118,11 +59,7 @@
             <v-snackbar color="error" v-model="snackbarData.show">
                 {{ snackbarData.msg }}
                 <template v-slot:actions>
-                    <v-btn
-                        class="text-white"
-                        variant="text"
-                        @click="snackbarData.show = false"
-                    >
+                    <v-btn class="text-white" variant="text" @click="snackbarData.show = false">
                         Close
                     </v-btn>
                 </template>
@@ -132,11 +69,7 @@
                 Link copied!
 
                 <template v-slot:actions>
-                    <v-btn
-                        class="text-white"
-                        variant="text"
-                        @click="data.snackbar = false"
-                    >
+                    <v-btn class="text-white" variant="text" @click="data.snackbar = false">
                         Close
                     </v-btn>
                 </template>
@@ -148,12 +81,7 @@
         <v-card class="mx-auto" width="300" height="300">
             <div class="d-flex w-100 h-100 align-center">
                 <div class="w-100 mx-auto">
-                    <v-progress-circular
-                        :size="100"
-                        class="mx-auto w-100 my-2"
-                        indeterminate
-                        color="#f4dde9"
-                    >
+                    <v-progress-circular :size="100" class="mx-auto w-100 my-2" indeterminate color="#f4dde9">
                     </v-progress-circular>
                     <div class="my-2 text-center">
                         Waiting for block confirmation. <br />(Ex: on-chain
@@ -251,12 +179,19 @@ const createVote = async () => {
     // Upload result to smart contract!
     const StarVoting = new StarVotingContract()
     StarVoting.init()
-    await StarVoting.createPoll(
-        uuidBigNumber,
-        data.showRealtimeResult,
-        !data.publicVote,
-        JSON.stringify(voteData)
-    )
+    try {
+        await StarVoting.createPoll(
+            uuidBigNumber,
+            data.showRealtimeResult,
+            !data.publicVote,
+            JSON.stringify(voteData)
+        )
+    } catch (error) {
+        shouldBeDisabled.value = false
+        console.log("Error catched", error)
+        showSnackbar("Error: Unexpected behavior happened!, try refresh and reconnect your wallet!")
+        return
+    }
 
     shouldBeDisabled.value = false
     data.shareVotelinkDialog = true

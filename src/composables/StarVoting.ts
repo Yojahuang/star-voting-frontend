@@ -65,8 +65,12 @@ export default class StarVotingContract {
     }
 
     waitTx = async (tx: any) => {
-        const receipt = await tx.wait()
-        console.log(receipt)
+        try {
+            const receipt = await tx.wait()
+            console.log(receipt)
+        } catch (error) {
+            console.log("Error catched", error)
+        }
     }
 
     createPoll = async (
