@@ -3,19 +3,10 @@ import { ref, watch } from "vue"
 import BrowserWallet from "@/composables/wallet"
 
 export const useGlobalStore = defineStore('global', () => {
-    type chain = 'ThunderCore' | "ThunderCore Testnet" | "Linea Testnet" | "Gnosis"
-    const selectedChain = ref<chain>('ThunderCore')
+    type chain = "ThunderCore Testnet" | "Linea Testnet" | "Chiado(Gnosis) testnet"
+    const selectedChain = ref<chain>('ThunderCore Testnet')
 
     const chainInfoMap = {
-        "ThunderCore": {
-            chainId: 108,
-            rpcUrl: "https://mainnet-rpc.thundercore.com",
-            nativeCurrency: {
-                name: "TT",
-                symbol: "TT",
-                decimals: 18
-            }
-        },
         "ThunderCore Testnet": {
             chainId: 18,
             rpcUrl: "https://testnet-rpc.thundercore.com",
@@ -34,12 +25,12 @@ export const useGlobalStore = defineStore('global', () => {
                 decimals: 18
             }
         },
-        "Gnosis": {
-            chainId: 100,
-            rpcUrl: "https://rpc.gnosischain.com",
+        "Chiado(Gnosis) testnet": {
+            chainId: 10200,
+            rpcUrl: "https://rpc.chiadochain.net",
             nativeCurrency: {
-                name: "xdai",
-                symbol: "xdai",
+                name: "xDAI",
+                symbol: "xDAI",
                 decimals: 18
             }
         },

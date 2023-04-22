@@ -9,7 +9,7 @@
             <v-btn class="mx-2 text-white" @click="toggleTheme()" icon="mdi-theme-light-dark" variant="text"></v-btn>
 
             <v-select class="mx-2 text-white" v-model="selectedChain"
-                :items="['ThunderCore', 'ThunderCore Testnet', 'Linea Testnet', 'Gnosis']" hide-details="auto"
+                :items="['ThunderCore Testnet', 'Linea Testnet', 'Chiado(Gnosis) testnet']" hide-details="auto"
                 density="comfortable"></v-select>
 
             <v-chip class="mx-2 text-white" v-if="address != ''">{{ beautifyAddress() }}</v-chip>
