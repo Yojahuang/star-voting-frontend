@@ -159,10 +159,15 @@ const castVote = async () => {
 
     group.addMembers(memberInGroup)
 
-    const data = "937ee12277092e3b340a74423bce8d7167e9e41a"
-
+    //const data = "937ee12277092e3b340a74423bce8d7167e9e41a"
+    const data = "123123"
     let fullProof: FullProof
-    fullProof = await generateProof(identity, group, pollId, Buffer.from(data))
+    fullProof = await generateProof(
+        identity,
+        group,
+        pollId,
+        Buffer.from(data)
+    );
 
     const StarVoting = new StarVotingContract()
     StarVoting.init()
@@ -170,7 +175,7 @@ const castVote = async () => {
     console.log(pollId)
     console.log(typeof (pollId))
 
-    await StarVoting.castVote(data, fullProof.externalNullifier, pollId, fullProof.proof);
+    await StarVoting.castVote(data, fullProof.nullifierHash, pollId, fullProof.proof);
 
     // Remove the identity from local storage
     // localStorage.removeItem("identity")
