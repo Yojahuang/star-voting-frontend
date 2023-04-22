@@ -42,7 +42,7 @@
             <v-icon class="mx-auto" icon="mdi-check-bold" size="50"></v-icon>
             Your vote has been created! <br />
             <div class="d-flex align-center w-100 justify-center">
-                <div class="text-center">{{ displayShortLink() }}</div>
+                <v-text-field @click="copyLink()" v-model="data.voteLink"></v-text-field>
                 <v-btn variant="text" @click="copyLink()" icon="mdi-content-copy"></v-btn>
             </div>
         </v-card>
@@ -88,7 +88,8 @@ const data = reactive({
     pollUuid: "",
     snackbar: false,
     showRealtimeResult: false,
-    publicVote: true
+    publicVote: true,
+    voteLink: ""
 })
 
 const snackbarData = reactive({
@@ -114,15 +115,8 @@ const removeOption = (idx: number) => {
     data.options.splice(idx, 1)
 }
 
-const displayShortLink = () => {
-    const actualLink = `http://127.0.0.1:5173/vote/${data.pollUuid}`
-
-    const length = actualLink.length
-    return actualLink.substring(0, 5) + "..." + actualLink.substring(length - 5, length)
-}
-
 const copyLink = async () => {
-    await navigator.clipboard.writeText(`http://127.0.0.1:5173/vote/${data.pollUuid}`)
+    await navigator.clipboard.writeText(data.voteLink)
     data.snackbar = true
 }
 
@@ -155,10 +149,11 @@ const createVote = async () => {
     // Upload result to smart contract!
     const StarVoting = new StarVotingContract()
     StarVoting.init()
-    StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, data.publicVote, JSON.stringify(voteData))
+    await StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, data.publicVote, JSON.stringify(voteData))
 
     // Show share link to coordinator
     data.shareVotelinkDialog = true
+    data.voteLink = window.location.origin + `/vote/${data.pollUuid}`
 }
 </script>
 

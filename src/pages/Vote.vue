@@ -21,7 +21,9 @@
             <template v-for="(option, index) in payload.options">
                 <div class="d-flex align-center w-100 mx-auto justify-start">
                     <div class="mx-2">{{ option }}</div>
-                    <v-text-field class="w-auto mx-2" hide-details="auto" v-model="vote[index]">
+                    <v-text-field class="w-auto mx-2" :rules="[(value: number) => {
+                        return !Number.isNaN(value) && value >= 0
+                    }]" :disable="true" hide-details="auto" v-model="vote[index]">
                         <template #prepend-inner><v-icon @click="decreaseVote(index)" icon="mdi-minus"></v-icon></template>
                         <template #append-inner><v-icon @click="increaseVote(index)" icon="mdi-plus"></v-icon></template>
                     </v-text-field>
@@ -154,21 +156,6 @@ const startVote = async () => {
     StarVoting.init()
 
     await StarVoting.startPoll(pollId, publicKeyBase64)
-
-    // console.log(publicKeyBase64)
-    // console.log(privateKeyBase64)
-
-    // const recoveredKeyPair = {
-    //     publicKey: Buffer.from(publicKeyBase64, "base64"),
-    //     privateKey: Buffer.from(privateKeyBase64, "base64")
-    // }
-
-    // const str = 'test message to encrypt';
-    // const msg = eccryptoJS.utf8ToBuffer(str);
-
-    // const encrypted = await eccryptoJS.encrypt(keyPair.publicKey, msg);
-
-    // const decrypted = await eccryptoJS.decrypt(keyPair.privateKey, encrypted);
 }
 
 const joinVote = async () => {
@@ -228,6 +215,10 @@ const setupChart = () => {
 
 const decreaseVote = (index: number) => {
     vote.value[index]--
+
+    if (vote.value[index] < 0) {
+        vote.value[index]++
+    }
 }
 
 const increaseVote = (index: number) => {
