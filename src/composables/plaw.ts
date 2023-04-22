@@ -243,4 +243,4 @@ const getEvents = async (chainName: chainName, eventName: event) => {
 
 };
 
-export { getEvents };
+export { getEvents, type chainName };
