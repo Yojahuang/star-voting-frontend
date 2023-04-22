@@ -14,7 +14,7 @@ const cards = reactive([
     {
         title: 'Honesty / Soundness',
         subtitle: 'Powered by Zero-Knowledge Semaphore',
-        text: 'We use zero-knowledge to ensure that the identity secret generating a specific proof cannot be traced back. Also, the honesty of poll results(on-chain) can be verified through decrypting the proof using the private key released at the end of the poll.',
+        text: 'We use zero-knowledge to ensure that the identity secret generating a specific proof cannot be traced back. Also, the honesty of poll results(on-chain) can be verified through decrypting the signal using the private key released at the end of the poll.',
         icon: 'mdi-hand-front-left',
         show: true,
         showText: false,
@@ -23,7 +23,7 @@ const cards = reactive([
     {
         title: 'Anonymity',
         subtitle: 'Powered by Zero-Knowledge Semaphore',
-        text: "No individual in a group can be identified as the source of a specific voting signal (e.g., choosing option n) through reverse engineering, due to the irreversibility provided by Semaphore's implementation of Merkle tree.",
+        text: "No individual in a group can be identified as the source of a specific voting signal (e.g., choosing option n) through reverse engineering, due to the irreversibility provided by Semaphore Protocol.",
         icon: 'mdi-incognito',
         show: true,
         showText: false,
