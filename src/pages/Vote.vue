@@ -35,7 +35,7 @@
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="stateEnum[voteInfoOnChain.state] != 'Created'"
                 @click="joinVote()">Join
                 the vote</v-btn>
-            <v-btn class="mx-2" :disabled="stateEnum[voteInfoOnChain.state] != 'Ongoing'" @click="sendVote()">Vote</v-btn>
+            <v-btn class="mx-2" :disabled="stateEnum[voteInfoOnChain.state] != 'Ongoing'" @click="castVote()">Vote</v-btn>
             <v-btn class="mx-2"
                 v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Created'"
                 @click="startVote()" prepend-icon="mdi-toggle-switch">Start
@@ -60,10 +60,15 @@ import { Identity } from "@semaphore-protocol/identity"
 import StarVotingContract from "@/composables/StarVoting"
 import BrowserWallet from "@/composables/wallet"
 
+import { useGlobalStore } from '@/stores/Global';
+
 import * as eccryptoJS from 'eccrypto-js';
 import { Buffer } from 'buffer';
 
+import { getGroupMembers } from '@/composables/Group'
+
 import { onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 
 const voteRules = [(value: string) => {
     console.log(vote.value)
@@ -145,6 +150,22 @@ const hasDecrypted = () => {
     return true
 }
 
+const castVote = async() => {
+    const identityStr = localStorage.getItem("identity")
+    if (identityStr == undefined) return
+
+    console.log("Casting vote")
+    const identify = new Identity(identityStr)
+
+    // Fetch group members to rebuild merkle tree
+    const globalStore = useGlobalStore()
+    const {selectedChain} = storeToRefs(globalStore)
+    getGroupMembers(selectedChain, pollId.toString())
+
+    // Remove the identity from local storage
+    // localStorage.removeItem("identity")
+}
+
 const endVote = async () => {
 
 }
@@ -174,15 +195,6 @@ const joinVote = async () => {
     StarVoting.init()
 
     await StarVoting.addVoter(pollId, commitment)
-}
-
-const sendVote = () => {
-    const identityStr = localStorage.getItem("identity")
-    if (identityStr == undefined) return
-
-    localStorage.removeItem("identity")
-
-    const identify = new Identity(identityStr)
 }
 
 const parseRealtimeResult = (): number[] => {
