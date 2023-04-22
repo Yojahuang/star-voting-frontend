@@ -34,6 +34,7 @@
         <v-divider></v-divider>
 
         <div class="d-flex mx-4 my-4">
+            <v-btn class="mx-2" prepend-icon="mdi-refresh" @click="refresh()">Refresh vote info</v-btn>
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="disabledState.joinVote" @click="joinPoll()">Join
                 the vote</v-btn>
             <v-btn class="mx-2" :disabled="disabledState.voteTextfield" @click="castVote()">Vote</v-btn>
@@ -207,6 +208,20 @@ onMounted(async () => {
     await decryptPollDetail()
 })
 
+const refresh = async () => {
+    disableCount.value = disableCount.value + 1
+
+    await getInfo()
+    await getOwnerOfVoteFromBlockchain()
+    await getStateFromBlockchain()
+
+    disabledState.joinVote = await calculateJoinVoteDisabled()
+    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
+
+    disableCount.value = disableCount.value - 1
+    await decryptPollDetail()
+}
+
 const payload = ref({
     title: '',
     description: '',
@@ -281,6 +296,8 @@ const castVote = async () => {
         fullProof.proof
     )
 
+    await parseRealtimeResult()
+
     // Remove the identity from local storage
     // localStorage.removeItem(`${pollId.toString()}_identity`)
     disabledState.voteTextfield = true
@@ -327,6 +344,9 @@ const endPoll = async () => {
 
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     await StarVoting.endPoll(pollId, privateKeyBase64)
+
+    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
+
     disableCount.value = disableCount.value - 1
 }
 
