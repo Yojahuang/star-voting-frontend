@@ -16,6 +16,7 @@ export default defineConfig({
     },
     optimizeDeps: {
         esbuildOptions: {
+            target: 'esnext',
             // Node.js global to browser globalThis
             define: {
                 global: 'globalThis',

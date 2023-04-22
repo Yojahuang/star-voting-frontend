@@ -62,6 +62,8 @@ import * as eccryptoJS from 'eccrypto-js'
 import { Buffer } from 'buffer'
 import { useGlobalStore } from '@/stores/Global'
 
+import { BSON } from 'bson';
+
 import AES from 'crypto-js/aes'
 import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts'
@@ -210,27 +212,39 @@ const castVote = async () => {
         selectedChain.value,
         pollId.toString()
     )
-
     group.addMembers(memberInGroup)
 
-    // TODO: Is this live poll?
-    pollInfo.payload.livePoll
-
-    // TODO: Casting vote data and encrypt it
+    // Vote Data Processing
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
+    // Pack vote data as [index0, voteCount0, index1, voteCount1, ...]
+    let dataByteArray = new Uint8Array(vote.value.length * 2)
+    for (let i = 0; i < vote.value.length; i+=2) {
+        dataByteArray[i] = i;
+        dataByteArray[i+1] = vote.value[i]
+    }
 
-    const data = '123123'
+    // If this isn't a realtime poll, encrypt the vote data
+    let serializedData: Buffer
+    if (pollInfo.showRealtimeResult != true) {
+        // Query encryptionKey and encrypt vote data
+        const encryptionKey = await StarVoting.getEncryptionKey(pollId)
+        const encryptedData = await encryptMessage(Buffer.from(dataByteArray), Buffer.from(encryptionKey, 'base64'))
+
+        serializedData = Buffer.from(BSON.serialize(encryptedData))
+    } else {    // If this is a realtime poll, don't encrypt the vote data
+        serializedData = Buffer.from(BSON.serialize(dataByteArray))
+    }
 
     // Proof Generation
     let fullProof: FullProof
-    fullProof = await generateProof(identity, group, pollId, Buffer.from(data))
+    const voteData = serializedData.toString('base64')
 
-
-
+    fullProof = await generateProof(identity, group, pollId, Buffer.from(voteData))
+    
     await StarVoting.castVote(
-        data,
+        voteData,
         fullProof.nullifierHash,
         pollId,
         fullProof.proof

@@ -1,9 +1,8 @@
 import { Buffer } from 'buffer'
 import * as eccryptoJS from 'eccrypto-js'
 
-export async function encryptMessage(message: string, pubKey: Buffer) {
-    const msg = eccryptoJS.utf8ToBuffer(message)
-    const encrypted = await eccryptoJS.encrypt(pubKey, msg)
+export async function encryptMessage(message: Buffer, pubKey: Buffer) {
+    const encrypted = await eccryptoJS.encrypt(pubKey, message)
     return encrypted
 }
 
