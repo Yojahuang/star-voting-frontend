@@ -8,9 +8,9 @@
             <strong>{{ stateEnum[pollInfoOnChain.state] }}</strong>
         </v-progress-linear>
 
-        <div v-show="pollInfo.showRealtimeResult" class="mx-auto mx-4 my-4" style="width: 600px; height: 400px" id="echart">
+        <div v-show="pollInfo.showRealtimeResult || pollInfoOnChain.state == 2" class="mx-auto mx-4 my-4"
+            style="width: 600px; height: 400px" id="echart">
         </div>
-
 
         <div class="font-weight-thin mx-4 my-4">
             Your remaining votes:
@@ -35,19 +35,16 @@
 
         <div class="d-flex mx-4 my-4">
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="disabledState.joinVote" @click="joinPoll()">Join
-                the
-                vote</v-btn>
+                the vote</v-btn>
             <v-btn class="mx-2" :disabled="disabledState.voteTextfield" @click="castVote()">Vote</v-btn>
-            <v-btn class="mx-2" v-if="
-                browserWallet.getAddress() ==
+            <v-btn class="mx-2" v-if="browserWallet.getAddress() ==
                 pollInfoOnChain.ownerAddress &&
                 stateEnum[pollInfoOnChain.state] == 'Created'
-            " @click="startPoll()" prepend-icon="mdi-toggle-switch">Start Vote</v-btn>
-            <v-btn class="mx-2" v-if="
-                browserWallet.getAddress() ==
+                " @click="startPoll()" prepend-icon="mdi-toggle-switch">Start Vote</v-btn>
+            <v-btn class="mx-2" v-if="browserWallet.getAddress() ==
                 pollInfoOnChain.ownerAddress &&
                 stateEnum[pollInfoOnChain.state] == 'Ongoing'
-            " @click="endPoll()" prepend-icon="mdi-toggle-switch">End Vote</v-btn>
+                " @click="endPoll()" prepend-icon="mdi-toggle-switch">End Vote</v-btn>
         </div>
     </v-card>
 
@@ -57,7 +54,10 @@
                 <div class="w-100 mx-auto">
                     <v-progress-circular :size="100" class="mx-auto w-100 my-2" indeterminate color="#f4dde9">
                     </v-progress-circular>
-                    <div class="my-2 text-center">Waiting for block confirmation. <br />(Ex: on-chain query)</div>
+                    <div class="my-2 text-center">
+                        Waiting for block confirmation. <br />(Ex: on-chain
+                        query)
+                    </div>
                 </div>
             </div>
         </v-card>
@@ -71,7 +71,7 @@ import { storeToRefs } from 'pinia'
 import { Buffer } from 'buffer'
 import { useGlobalStore } from '@/stores/Global'
 
-import { BSON } from 'bson';
+import { BSON } from 'bson'
 
 import AES from 'crypto-js/aes'
 import encUtf8 from 'crypto-js/enc-utf8'
@@ -91,7 +91,6 @@ import * as eccryptoJS from 'eccrypto-js'
 
 const voteRules = [
     (value: string) => {
-        console.log(selectedVote.value)
         if (Number(value) < 0) return "Can't be negative"
         if (Number.isNaN(Number(value))) return 'Please input a number'
         if (calculateRemainVote() < 0) return 'Remain vote < 0'
@@ -103,7 +102,7 @@ const stateEnum = ['Created', 'Ongoing', 'Ended']
 
 const disabledState = reactive({
     voteTextfield: false,
-    joinVote: false
+    joinVote: false,
 })
 
 const showLoadingCircle = computed(() => {
@@ -133,7 +132,10 @@ const inMemberGroup = async () => {
     if (identityStr == null) return false
     const { commitment } = new Identity(identityStr)
 
-    const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
+    const memberInGroup = await getGroupMembers(
+        selectedChain.value,
+        pollId.toString()
+    )
 
     for (let i = 0; i < memberInGroup.length; ++i) {
         if (commitment.toString() == memberInGroup[i]) {
@@ -181,7 +183,7 @@ const disableCount = ref(2)
 const route = useRoute()
 const routeId = route.params.id
 const pollId = BigInt('0x' + routeId)
-const passcode: string = (route.params.passcode) as any
+const passcode: string = route.params.passcode as any
 
 let pollInfo: any = {}
 
@@ -241,7 +243,7 @@ const castVote = async () => {
     // Pack vote data as [index0, voteCount0, index1, voteCount1, ...]
     let dataByteArray = new Uint8Array(selectedVote.value.length * 2)
     for (let i = 0, cur = 0; i < selectedVote.value.length; i += 1, cur += 2) {
-        dataByteArray[cur] = i;
+        dataByteArray[cur] = i
         dataByteArray[cur + 1] = selectedVote.value[i]
     }
 
@@ -250,10 +252,14 @@ const castVote = async () => {
     if (pollInfo.showRealtimeResult != true) {
         // Query encryptionKey and encrypt vote data
         const encryptionKey = await StarVoting.getEncryptionKey(pollId)
-        const encryptedData = await eccryptoJS.encrypt(Buffer.from(encryptionKey, 'base64'), Buffer.from(dataByteArray))
+        const encryptedData = await eccryptoJS.encrypt(
+            Buffer.from(encryptionKey, 'base64'),
+            Buffer.from(dataByteArray)
+        )
 
         serializedData = Buffer.from(BSON.serialize(encryptedData))
-    } else {    // If this is a realtime poll, don't encrypt the vote data
+    } else {
+        // If this is a realtime poll, don't encrypt the vote data
         serializedData = Buffer.from(dataByteArray)
     }
 
@@ -261,7 +267,12 @@ const castVote = async () => {
     let fullProof: FullProof
     const voteData = serializedData.toString('base64')
 
-    fullProof = await generateProof(identity, group, pollId, Buffer.from(voteData))
+    fullProof = await generateProof(
+        identity,
+        group,
+        pollId,
+        Buffer.from(voteData)
+    )
 
     await StarVoting.castVote(
         voteData,
@@ -284,8 +295,13 @@ const startPoll = async () => {
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
     const privateKeyBase64 = keyPair.privateKey.toString('base64')
 
+    console.log(publicKeyBase64, privateKeyBase64)
+
     localStorage.setItem(`${pollId.toString()}_publicKey`, publicKeyBase64)
     localStorage.setItem(`${pollId.toString()}_privateKey`, privateKeyBase64)
+
+    console.log(localStorage.getItem(`${pollId.toString()}_publicKey`), localStorage.getItem(`${pollId.toString()}_privateKey`))
+
 
     const StarVoting = new StarVotingContract()
     StarVoting.init()
@@ -295,6 +311,7 @@ const startPoll = async () => {
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     disableCount.value = disableCount.value - 1
 
+    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
     disabledState.joinVote = true
 }
 
@@ -303,7 +320,10 @@ const endPoll = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
-    const privateKeyBase64 = localStorage.getItem(`${pollId.toString()}}_privateKey`) || ''
+    const privateKeyBase64 =
+        localStorage.getItem(`${pollId.toString()}_privateKey`) || ''
+
+    console.log(privateKeyBase64)
 
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     await StarVoting.endPoll(pollId, privateKeyBase64)
@@ -330,20 +350,28 @@ const parseRealtimeResult = async (): Promise<number[]> => {
     const globalStore = useGlobalStore()
     const { selectedChain } = storeToRefs(globalStore)
 
-    const voteAddedEvents: any = await getEvents(selectedChain.value, 'VoteAdded')
-    const filteredVoteAddedEvents = voteAddedEvents.reduce((acc: any, cur: any) => {
-        if (cur.pollId == pollId.toString()) {
-            acc.push(cur)
-        }
-        return acc
-    }, [])
+    const voteAddedEvents: any = await getEvents(
+        selectedChain.value,
+        'VoteAdded'
+    )
+    const filteredVoteAddedEvents = voteAddedEvents.reduce(
+        (acc: any, cur: any) => {
+            if (cur.pollId == pollId.toString()) {
+                acc.push(cur)
+            }
+            return acc
+        },
+        []
+    )
 
-    const result: number[] = [];
+    const result: number[] = []
     for (let i = 0; i < payload.value.options.length; i++) result.push(0)
 
     if (pollInfo.showRealtimeResult == true) {
         for (const voteData of filteredVoteAddedEvents) {
-            const voteDataArray = Uint8Array.from(Buffer.from(voteData.vote, 'base64'))
+            const voteDataArray = Uint8Array.from(
+                Buffer.from(voteData.vote, 'base64')
+            )
             for (let i = 0; i < voteDataArray.length; i += 2) {
                 result[voteDataArray[i]] += voteDataArray[i + 1]
             }
@@ -355,7 +383,11 @@ const parseRealtimeResult = async (): Promise<number[]> => {
     StarVoting.init()
 
     const decryptionKey = await StarVoting.getDecryptionKey(pollId)
+
+    console.log(decryptionKey.length)
+
     if (decryptionKey.length < 1) return result
+
 
     for (const voteData of filteredVoteAddedEvents) {
         const doc = BSON.deserialize(Buffer.from(voteData.vote, 'base64'))
@@ -363,10 +395,13 @@ const parseRealtimeResult = async (): Promise<number[]> => {
             iv: Buffer.from(doc.iv.buffer),
             ephemPublicKey: Buffer.from(doc.ephemPublicKey.buffer),
             ciphertext: Buffer.from(doc.ciphertext.buffer),
-            mac: Buffer.from(doc.mac.buffer)
+            mac: Buffer.from(doc.mac.buffer),
         }
 
-        const decryptedData = await eccryptoJS.decrypt(Buffer.from(decryptionKey, 'base64'), encryptedObject)
+        const decryptedData = await eccryptoJS.decrypt(
+            Buffer.from(decryptionKey, 'base64'),
+            encryptedObject
+        )
         const decryptedVoteData = Uint8Array.from(decryptedData)
         for (let i = 0; i < decryptedVoteData.length; i += 2) {
             result[decryptedVoteData[i]] += decryptedVoteData[i + 1]
@@ -439,7 +474,8 @@ const decryptPollDetail = async () => {
         pollInfo.payload = JSON.parse(bytePayload.toString(encUtf8))
 
         payload.value = pollInfo.payload
-        for (let i = 0; i < pollInfo.payload.options.length; ++i) selectedVote.value.push(0)
+        for (let i = 0; i < pollInfo.payload.options.length; ++i)
+            selectedVote.value.push(0)
     } catch (error) {
         alert('Passcode is wrong!')
         console.log(error)

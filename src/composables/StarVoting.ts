@@ -25,7 +25,9 @@ export default class StarVotingContract {
 
         let encryptionKey
         try {
-            encryptionKey = await this.starVotingContract.getEncryptionKey(pollId)
+            encryptionKey = await this.starVotingContract.getEncryptionKey(
+                pollId
+            )
         } catch (error) {
             console.log(error)
         }
@@ -38,7 +40,9 @@ export default class StarVotingContract {
 
         let decryptionKey
         try {
-            decryptionKey = await this.starVotingContract.getDecryptionKey(pollId)
+            decryptionKey = await this.starVotingContract.getDecryptionKey(
+                pollId
+            )
         } catch (error) {
             console.log(error)
         }

@@ -8512,7 +8512,6 @@ async function plonk16Prove(zkeyFileName, witnessFileName, logger) {
         }
 
         ;[A, B, C] = await buildABC()
-
         ;[pol_a, A4] = await to4T(A, [ch.b[2], ch.b[1]])
         ;[pol_b, B4] = await to4T(B, [ch.b[4], ch.b[3]])
         ;[pol_c, C4] = await to4T(C, [ch.b[6], ch.b[5]])
@@ -8635,7 +8634,6 @@ async function plonk16Prove(zkeyFileName, witnessFileName, logger) {
         }
 
         Z = numArr
-
         ;[pol_z, Z4] = await to4T(Z, [ch.b[9], ch.b[8], ch.b[7]])
 
         proof.Z = await expTau(pol_z, 'multiexp Z')

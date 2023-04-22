@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'url'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
+import nodePolyfills from 'rollup-plugin-node-polyfills'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,6 +14,12 @@ export default defineConfig({
                 replacement: fileURLToPath(new URL('./src', import.meta.url)),
             },
         ],
+    },
+    build: {
+        target: 'esnext',
+        rollupOptions: {
+            plugins: [nodePolyfills({ crypto: true })],
+        },
     },
     optimizeDeps: {
         esbuildOptions: {
