@@ -2,6 +2,18 @@ import { ethers } from "ethers";
 import ABI from "@/assets/StarVoting.json"
 const address = "0xAC3d9886750b7Ac602E0900aAb13F597910F4700";
 
+const blockMap = {
+    "ThunderCore Testnet": {
+        "startBlock": 104926408
+    },
+    "Linea Testnet": {
+        "startBlock": 532009  // need for renew
+    },
+    "Chiado(Gnosis) testnet": {
+        "startBlock": 3584426  // need for renew -> not yet has block
+    },
+}
+
 // for group
 const getGroupCreatedEvent = async (contract, startBlock, endBlock) => {
     const filter = contract.filters.GroupCreated();
@@ -172,59 +184,70 @@ const getPollEndedEvent = async (contract, startBlock, endBlock) => {
 
 // 1. wait for star's address to fill in
 // 2. find provider url -> not really sure
-function getContract(chain_name) {
-
+function getContract(chainName) {
     let provider;
     let contract;
 
-    if (chain_name === "ThunderCore") {
+    if (chainName === "ThunderCore") {
         provider = new ethers.providers.WebSocketProvider("wss://mainnet-ws.thundercore.com");
 
-    } else if (chain_name === "ThunderCore Testnet") {  // chain 1 deployed -> on going -> good
-        console.log(" +++++ In ThunderCore Testnet +++++ ");
+    } else if (chainName === "ThunderCore Testnet") {  // chain 1 deployed -> on going -> good
+        // console.log(" +++++ In ThunderCore Testnet +++++ ");
         provider = new ethers.providers.WebSocketProvider("wss://testnet-ws.thundercore.com");
 
-    } else if (chain_name === "Linea Testnet") {
+    } else if (chainName === "Linea Testnet") {
         provider = new ethers.providers.JsonRpcProvider("https://rpc.goerli.linea.build/");
 
-    } else if (chain_name === "Gnosis") {
+    } else if (chainName === "Gnosis") {
         provider = new ethers.providers.JsonRpcProvider("https://rpc.gnosischain.com/");
 
-    } else if (chain_name === "Chiado Testnet") {  // chain 2 deployed -> on going
-        console.log(" +++++ In Chiado Testnet +++++ ");
+    } else if (chainName === "Chiado Testnet") {  // chain 2 deployed -> on going
+        // console.log(" +++++ In Chiado Testnet +++++ ");
         provider = new ethers.providers.JsonRpcProvider("https://rpc.chiadochain.net");
     }
 
     contract = new ethers.Contract(address, ABI, provider);
-    return contract;
+    return { contract, startBlock: blockMap[chainName].startBlock, provider }
+}
+
+// Get the block number
+const getBlockNumber = async (provider) => {
+    const blockNumber = await provider.getBlockNumber()
+    // console.log(blockNumber)
+    return blockNumber
 }
 
 
-const getEvents = async (start_block, end_block, chain_name, event_name) => {
 
-    const contract = getContract(chain_name);
+const getEvents = async (chainName, eventName) => {
+
+    const { contract, startBlock, provider } = getContract(chainName);
     // console.log("contract: ", contract);
+
+    const endBlock = await getBlockNumber(provider);
+    console.log("startBlock: ", startBlock);
+    console.log("endBlock: ", endBlock);
 
     let info;
     // for group
-    if (event_name === "GroupCreated") {
-        info = await getGroupCreatedEvent(contract, start_block, end_block);
-    } else if (event_name === "MemberAdded") {
-        info = await getMemberAddedEvent(contract, start_block, end_block);
-    } else if (event_name === "MemberUpdated") {
-        info = await getMemberUpdatedEvent(contract, start_block, end_block);
-    } else if (event_name === "MemberRemoved") {
-        info = await getMemberRemovedEvent(contract, start_block, end_block);
+    if (eventName === "GroupCreated") {
+        info = await getGroupCreatedEvent(contract, startBlock, endBlock);
+    } else if (eventName === "MemberAdded") {
+        info = await getMemberAddedEvent(contract, startBlock, endBlock);
+    } else if (eventName === "MemberUpdated") {
+        info = await getMemberUpdatedEvent(contract, startBlock, endBlock);
+    } else if (eventName === "MemberRemoved") {
+        info = await getMemberRemovedEvent(contract, startBlock, endBlock);
 
         // for Voting
-    } else if (event_name === "PollCreated") {
-        info = await getPollCreatedEvent(contract, start_block, end_block);
-    } else if (event_name === "PollStarted") {
-        info = await getPollStartedEvent(contract, start_block, end_block);
-    } else if (event_name === "VoteAdded") {
-        info = await getVoteAddedEvent(contract, start_block, end_block);
-    } else if (event_name === "PollEnded") {
-        info = await getPollEndedEvent(contract, start_block, end_block);
+    } else if (eventName === "PollCreated") {
+        info = await getPollCreatedEvent(contract, startBlock, endBlock);
+    } else if (eventName === "PollStarted") {
+        info = await getPollStartedEvent(contract, startBlock, endBlock);
+    } else if (eventName === "VoteAdded") {
+        info = await getVoteAddedEvent(contract, startBlock, endBlock);
+    } else if (eventName === "PollEnded") {
+        info = await getPollEndedEvent(contract, startBlock, endBlock);
     }
 
     return info;
@@ -239,14 +262,14 @@ const getEvents = async (start_block, end_block, chain_name, event_name) => {
 // ask yo what kind of event he needs
 // block change, parameter change
 // (async () => {
-//     info = await getEvents(104926408, 104937751, "ThunderCore Testnet", "PollCreated");
+//     info = await getEvents(104940549, 104937751, "ThunderCore Testnet", "PollCreated");
 //     console.log(info)
 
-//     info = await getEvents(104926408, 104937751, "ThunderCore Testnet", "PollStarted");
-//     console.log(info)
+//     // info = await getEvents(104926408, 104937751, "ThunderCore Testnet", "PollStarted");
+//     // console.log(info)
 
-//     info = await getEvents(104926408, 104937751, "ThunderCore Testnet", "MemberAdded");
-//     console.log(info)
+//     // info = await getEvents(104926408, 104937751, "ThunderCore Testnet", "MemberAdded");
+//     // console.log(info)
 
 //     // info = await getEvents(130356778, 130357074, "Chiado Testnet", "GroupCreated");  // [sync]
 //     // console.log(info)
