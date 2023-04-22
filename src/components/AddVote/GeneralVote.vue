@@ -24,6 +24,11 @@
         <div class="form-title my-4">Settings</div>
         <v-checkbox hide-details="auto" v-model="data.useQuadratic" label="Use quadratic voting"></v-checkbox>
         <v-checkbox hide-details="auto" v-model="data.showRealtimeResult" label="Show realtime result"></v-checkbox>
+        <v-checkbox class="mb-2"
+            :messages="data.publicVote ? '' : 'If you make the vote private, you\'ll have to collect commitments by yourself'"
+            v-model="data.publicVote" label="Make the vote public">
+        </v-checkbox>
+
         <v-text-field hide-details="auto" v-model="data.voteCount"
             label="How many votes each people should have"></v-text-field>
         <v-text-field hide-details="auto" v-model="data.passcode"
@@ -43,11 +48,20 @@
         </v-card>
     </v-dialog>
 
+    <v-snackbar color="error" v-model="snackbarData.show">
+        {{ snackbarData.msg }}
+        <template v-slot:actions>
+            <v-btn class="text-white" variant="text" @click="snackbarData.show = false">
+                Close
+            </v-btn>
+        </template>
+    </v-snackbar>
+
     <v-snackbar v-model="data.snackbar">
         Link copied!
 
         <template v-slot:actions>
-            <v-btn color="pink" variant="text" @click="data.snackbar = false">
+            <v-btn class="text-white" variant="text" @click="data.snackbar = false">
                 Close
             </v-btn>
         </template>
@@ -55,10 +69,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue"
+import { reactive } from "vue"
 import AES from 'crypto-js/aes';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from "ethers"
+import StarVotingContract from "@/composables/StarVoting"
+
 
 const data = reactive({
     title: "",
@@ -72,11 +88,25 @@ const data = reactive({
     pollUuid: "",
     snackbar: false,
     showRealtimeResult: false,
+    publicVote: true
 })
+
+const snackbarData = reactive({
+    msg: "",
+    show: false,
+})
+
+
+const showSnackbar = (msg: string) => {
+    snackbarData.msg = msg
+    snackbarData.show = true
+}
 
 const addOption = () => {
     if (data.newOption != "")
         data.options.push(data.newOption)
+    else
+        showSnackbar("Error: Option shouldn't be null")
     data.newOption = ""
 }
 
@@ -85,14 +115,14 @@ const removeOption = (idx: number) => {
 }
 
 const displayShortLink = () => {
-    const actualLink = `http://127.0.0.1:5173/${data.pollUuid.value}`
+    const actualLink = `http://127.0.0.1:5173/vote/${data.pollUuid}`
 
     const length = actualLink.length
     return actualLink.substring(0, 5) + "..." + actualLink.substring(length - 5, length)
 }
 
 const copyLink = async () => {
-    await navigator.clipboard.writeText(`http://127.0.0.1:5173/${data.pollUuid.value}`)
+    await navigator.clipboard.writeText(`http://127.0.0.1:5173/vote/${data.pollUuid}`)
     data.snackbar = true
 }
 
@@ -120,11 +150,12 @@ const createVote = async () => {
 
     data.pollUuid = (ethers.utils.keccak256(utf8Encode.encode(uuid))).slice(2)
 
-    // Generate public key and private key
-
+    const uuidBigNumber = ethers.BigNumber.from("0x" + data.pollUuid)
 
     // Upload result to smart contract!
-
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+    StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, data.publicVote, JSON.stringify(voteData))
 
     // Show share link to coordinator
     data.shareVotelinkDialog = true

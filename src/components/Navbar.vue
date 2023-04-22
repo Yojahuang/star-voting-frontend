@@ -28,6 +28,7 @@ import router from '@/router/index'
 import BrowserWallet from "@/composables/wallet"
 import { useGlobalStore } from "@/stores/Global"
 import { storeToRefs } from "pinia"
+import { onMounted } from "vue"
 
 const { selectedChain } = storeToRefs(useGlobalStore())
 
@@ -35,6 +36,10 @@ const theme = useTheme()
 
 const wallet = new BrowserWallet()
 const address = wallet.address
+
+onMounted(() => {
+    wallet.getAddress()
+})
 
 const beautifyAddress = (): string => {
     const addr = address.value

@@ -34,25 +34,63 @@
         <div class="d-flex my-4">
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" @click="joinVote()">Join the vote</v-btn>
             <v-btn class="mx-2" @click="sendVote()">Vote</v-btn>
-            <v-btn class="mx-2" prepend-icon="mdi-share-variant">Share</v-btn>
+            <v-btn class="mx-2"
+                v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Created'"
+                prepend-icon="mdi-toggle-switch">Start
+                Vote</v-btn>
+            <v-btn class="mx-2"
+                v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Ongoing'"
+                prepend-icon="mdi-toggle-switch">End
+                Vote</v-btn>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { ref } from "vue"
+import { ethers } from "ethers"
+import { ref, reactive } from "vue"
 import AES from 'crypto-js/aes';
 import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
 import { Identity } from "@semaphore-protocol/identity"
 
-const getInfo = (idx: number) => {
-    if (idx == 1) {
-        return { "showRealtimeResult": false, "payload": "U2FsdGVkX1+b9AFCIZJwLrkxxnJpwVRQZP2CXRWr2QSPzSRQU0R1UvSNncEtPaCsJThwvVc4tqBhjtLoegR5xq3TKT+HBqA9hlGdAIRBBQj6Rhhl/O4uKAEyyKI55g1+UktqtCOqTcj4ca+n/tuhtBx2FjkjSdbXF86DR8aKJPfQVjOeTY4kR8+yNoZhS3X3EXX52Fn0yBJdHGBUGEyEaBjsj/jPxEnrJ3OBkJ75PeM=" }
-    }
-    return { "showRealtimeResult": true, "payload": "U2FsdGVkX1/p5sRygz407W6m6gvcLGsaCmQT1c3vh2QsWA/+E7K1ZhhOvnl+hC7NJ5v0Tcq11Pd5SUJJU0hnWFPvndBG56pvuW8lv0ufXTDIJmJ9EhgVgs0PWFT4ayzNxGJf471naD8tmD10xMSRew==" }
+import StarVotingContract from "@/composables/StarVoting"
+import BrowserWallet from "@/composables/wallet"
+
+import { onMounted } from 'vue';
+
+const stateEnum = ["Created", "Ongoing", "Ended"]
+
+const voteInfoOnChain = reactive({
+    ownerAddress: "",
+    state: 0,
+})
+
+const getStateFromBlockchain = async () => {
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+    const result = await StarVoting.getPollState(pollId)
+    voteInfoOnChain.state = result
 }
+
+const getInfoFromBlockchain = async () => {
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+    const result = await StarVoting.getEncryptedPollInfo(pollId)
+    return result
+}
+
+const getOwnerOfVoteFromBlockchain = async () => {
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+
+    const result = await StarVoting.getPollCoordinator(pollId)
+
+    voteInfoOnChain.ownerAddress = result
+}
+
+const browserWallet = new BrowserWallet()
 
 const passcodeDialog = ref(true)
 
@@ -60,8 +98,20 @@ const passcode = ref("t031")
 
 const route = useRoute()
 const routeId = route.params.id
+const pollId = ethers.BigNumber.from("0x" + routeId)
 
-const info: any = getInfo(Number(routeId))
+let info: any = {}
+
+const getInfo = async () => {
+    info = await getInfoFromBlockchain()
+    info = JSON.parse(info)
+}
+
+onMounted(async () => {
+    await getInfo()
+    await getOwnerOfVoteFromBlockchain()
+    await getStateFromBlockchain()
+})
 
 const payload = ref({
     title: "",
@@ -73,16 +123,25 @@ const payload = ref({
 const vote = ref<number[]>([])
 
 const hasDecrypted = () => {
-    const checklist = [info.payload.title, info.payload.description, info.payload.options, info.payload.voteCount]
-    for (let i = 0; i < checklist.length; ++i) if (checklist[i] == undefined) return false
+    try {
+        const checklist = [info.payload.title, info.payload.description, info.payload.options, info.payload.voteCount]
+        for (let i = 0; i < checklist.length; ++i) if (checklist[i] == undefined) return false
+    } catch (error) {
+        return false
+    }
     return true
 }
 
-const joinVote = () => {
+const joinVote = async () => {
     const identity = new Identity()
     const { trapdoor, nullifier, commitment } = identity
     // Send commitment to smart contract to join the group!
     localStorage.setItem("identity", identity.toString())
+
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+
+    await StarVoting.addVoter(pollId, commitment)
 }
 
 const sendVote = () => {
@@ -90,7 +149,6 @@ const sendVote = () => {
     if (identityStr == undefined) return
 
     localStorage.removeItem("identity")
-
 
     const identify = new Identity(identityStr)
 }
@@ -144,9 +202,9 @@ const increaseVote = (index: number) => {
 const calculateRemainVote = () => {
     if (typeof info.payload == 'string') return 0
 
-    let ans = info.payload.voteCount
+    let ans = payload.value.voteCount
 
-    for (let i = 0; i < info.options; ++i) {
+    for (let i = 0; i < payload.value.options.length; ++i) {
         let cost = vote.value[i]
         if (info.useQuadratic) cost = cost * cost
         ans = ans - cost
@@ -163,6 +221,7 @@ const remainVoteFontColor = () => {
 }
 
 const decrypt = () => {
+    console.log(info)
     const bytePayload = AES.decrypt(info.payload, passcode.value)
     try {
         info.payload = JSON.parse(bytePayload.toString(encUtf8))
@@ -174,7 +233,7 @@ const decrypt = () => {
 
         payload.value = info.payload
 
-        for (let i = 0; i < info.options; ++i) vote.value.push(0)
+        for (let i = 0; i < info.payload.options.length; ++i) vote.value.push(0)
 
         console.log(info.payload)
     } catch (error) {

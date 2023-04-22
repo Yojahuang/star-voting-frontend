@@ -6,13 +6,13 @@ import { storeToRefs } from "pinia"
 export default class BrowserWallet {
     address = ref<string>("")
 
-    switchChain = async(chainId: number, rpcUrl: string, chainName: string, nativeCurrency: any)=>{
+    switchChain = async (chainId: number, rpcUrl: string, chainName: string, nativeCurrency: any) => {
         const ethereum = (window as any).ethereum
-        
+
         try {
             await ethereum.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x' + chainId.toString(16)}],
+                params: [{ chainId: '0x' + chainId.toString(16) }],
             });
         } catch (error) {
             try {
@@ -39,15 +39,15 @@ export default class BrowserWallet {
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
 
         const globalStore = useGlobalStore()
-        
+
         // get the chain selected in the select
         const { selectedChain } = storeToRefs(globalStore)
-        
+
         const chainMap = toRaw(globalStore.chainInfoMap)
 
         // MetaMask requires requesting permission to connect users accounts
         await provider.send("eth_requestAccounts", [])
-        
+
         const chainInfo = chainMap[selectedChain.value]
         await this.switchChain(chainInfo.chainId, chainInfo.rpcUrl, selectedChain.value, chainInfo.nativeCurrency);
 
@@ -61,7 +61,9 @@ export default class BrowserWallet {
     }
 
     getAddress = () => {
-        return this.address
+        const address = localStorage.getItem("address")
+        if (address) this.address.value = address
+        return this.address.value
     }
 
     getProvider = () => {
@@ -74,6 +76,15 @@ export default class BrowserWallet {
         const provider = new ethers.providers.JsonRpcProvider(providerURL)
 
         return provider
+    }
+
+    getSigner = () => {
+        const provider = this.getProvider()
+        if (provider) {
+            return provider.getSigner()
+        } else {
+            return null
+        }
     }
 
     disconnect = () => {

@@ -1,4 +1,4 @@
-import {defineStore} from "pinia"
+import { defineStore } from "pinia"
 import { ref, watch } from "vue"
 import BrowserWallet from "@/composables/wallet"
 
@@ -16,16 +16,16 @@ export const useGlobalStore = defineStore('global', () => {
                 decimals: 18
             }
         },
-        "ThunderCore Testnet" : {
+        "ThunderCore Testnet": {
             chainId: 18,
             rpcUrl: "https://testnet-rpc.thundercore.com",
             nativeCurrency: {
                 name: "TST",
                 symbol: "TST",
                 decimals: 18
-            }
+            },
         },
-        "Linea Testnet" : {
+        "Linea Testnet": {
             chainId: 59140,
             rpcUrl: "https://rpc.goerli.linea.build",
             nativeCurrency: {
@@ -34,7 +34,7 @@ export const useGlobalStore = defineStore('global', () => {
                 decimals: 18
             }
         },
-        "Gnosis" : {
+        "Gnosis": {
             chainId: 100,
             rpcUrl: "https://rpc.gnosischain.com",
             nativeCurrency: {
@@ -45,11 +45,11 @@ export const useGlobalStore = defineStore('global', () => {
         },
     }
 
-    watch(selectedChain, async() => {
+    watch(selectedChain, async () => {
         const wallet = new BrowserWallet()
         const chainInfo = chainInfoMap[selectedChain.value]
         await wallet.switchChain(chainInfo.chainId, chainInfo.rpcUrl, selectedChain.value, chainInfo.nativeCurrency)
     })
 
-    return {selectedChain, chainInfoMap}
+    return { selectedChain, chainInfoMap }
 })

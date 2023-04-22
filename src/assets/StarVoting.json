@@ -1,0 +1,588 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "contract IStarVotingVerifier",
+                "name": "_verifier",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__CallerIsNotThePollCoordinator",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__GroupAlreadyExists",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__GroupDoesNotExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__MerkleTreeDepthIsNotSupported",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__PollHasAlreadyBeenStarted",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__PollIsNotEnded",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__PollIsNotOngoing",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Semaphore__YouAreUsingTheSameNillifierTwice",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "merkleTreeDepth",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "zeroValue",
+                "type": "uint256"
+            }
+        ],
+        "name": "GroupCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "identityCommitment",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "merkleTreeRoot",
+                "type": "uint256"
+            }
+        ],
+        "name": "MemberAdded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "identityCommitment",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "merkleTreeRoot",
+                "type": "uint256"
+            }
+        ],
+        "name": "MemberRemoved",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "identityCommitment",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newIdentityCommitment",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "merkleTreeRoot",
+                "type": "uint256"
+            }
+        ],
+        "name": "MemberUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "coordinator",
+                "type": "address"
+            }
+        ],
+        "name": "PollCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "coordinator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "decryptionKey",
+                "type": "string"
+            }
+        ],
+        "name": "PollEnded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "coordinator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "encryptionKey",
+                "type": "string"
+            }
+        ],
+        "name": "PollStarted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "vote",
+                "type": "string"
+            }
+        ],
+        "name": "VoteAdded",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "identityCommitment",
+                "type": "uint256"
+            }
+        ],
+        "name": "addVoter",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "vote",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nullifierHash",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256[8]",
+                "name": "proof",
+                "type": "uint256[8]"
+            }
+        ],
+        "name": "castVote",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "coordinator",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "merkleTreeDepth",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "livePoll",
+                "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "isPrivate",
+                "type": "bool"
+            },
+            {
+                "internalType": "string",
+                "name": "encryptedInfo",
+                "type": "string"
+            }
+        ],
+        "name": "createPoll",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "decryptionKey",
+                "type": "string"
+            }
+        ],
+        "name": "endPoll",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getDecryptionKey",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getEncryptedPollInfo",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getEncryptionKey",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getMerkleTreeDepth",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getMerkleTreeRoot",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "groupId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getNumberOfMerkleTreeLeaves",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getPollCoordinator",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getPollState",
+        "outputs": [
+            {
+                "internalType": "enum IStarVoting.PollState",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "isLivePoll",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            }
+        ],
+        "name": "isPrivatePoll",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "pollId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "encryptionKey",
+                "type": "string"
+            }
+        ],
+        "name": "startPoll",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "verifier",
+        "outputs": [
+            {
+                "internalType": "contract IStarVotingVerifier",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
