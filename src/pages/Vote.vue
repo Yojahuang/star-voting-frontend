@@ -1,12 +1,7 @@
 <template>
     <div class="mx-auto w-75">
         <div v-if="passcodeDialog">
-            <v-text-field
-                autofocus
-                v-model="passcode"
-                @keyup.enter="decryptPollDetail"
-                label="Passcode"
-            ></v-text-field>
+            <v-text-field autofocus v-model="passcode" @keyup.enter="decryptPollDetail" label="Passcode"></v-text-field>
         </div>
     </div>
 
@@ -15,47 +10,24 @@
 
         <div class="mx-4 my-4">{{ payload.description }}</div>
 
-        <div
-            v-show="pollInfo.showRealtimeResult"
-            class="mx-auto mx-4 my-4"
-            style="width: 600px; height: 400px"
-            id="echart"
-        ></div>
+        <div v-show="pollInfo.showRealtimeResult" class="mx-auto mx-4 my-4" style="width: 600px; height: 400px" id="echart">
+        </div>
+
 
         <div class="font-weight-thin mx-4 my-4">
             Your remaining votes:
-            <p
-                class="font-weight-bold d-inline"
-                :style="{ color: remainVoteFontColor() }"
-            >
+            <p class="font-weight-bold d-inline" :style="{ color: remainVoteFontColor() }">
                 {{ calculateRemainVote() }}
             </p>
         </div>
 
         <div class="mx-4 my-4">
             <template v-for="(option, index) in payload.options">
-                <div
-                    class="mx-4 my-4 d-flex align-center w-100 mx-auto justify-start"
-                >
+                <div class="mx-4 my-4 d-flex align-center w-100 mx-auto justify-start">
                     <div class="mx-2">{{ option }}</div>
-                    <v-text-field
-                        class="w-auto mx-2"
-                        :rules="voteRules"
-                        hide-details="auto"
-                        v-model="vote[index]"
-                    >
-                        <template #prepend-inner
-                            ><v-icon
-                                @click="decreaseVote(index)"
-                                icon="mdi-minus"
-                            ></v-icon
-                        ></template>
-                        <template #append-inner
-                            ><v-icon
-                                @click="increaseVote(index)"
-                                icon="mdi-plus"
-                            ></v-icon
-                        ></template>
+                    <v-text-field class="w-auto mx-2" :rules="voteRules" hide-details="auto" v-model="vote[index]">
+                        <template #prepend-inner><v-icon @click="decreaseVote(index)" icon="mdi-minus"></v-icon></template>
+                        <template #append-inner><v-icon @click="increaseVote(index)" icon="mdi-plus"></v-icon></template>
                     </v-text-field>
                 </div>
             </template>
@@ -63,48 +35,26 @@
         <v-divider></v-divider>
 
         <div class="d-flex mx-4 my-4">
-            <v-btn
-                class="mx-2"
-                prepend-icon="mdi-account-plus"
-                :disabled="stateEnum[pollInfoOnChain.state] != 'Created'"
-                @click="joinPoll()"
-                >Join the vote</v-btn
-            >
-            <v-btn
-                class="mx-2"
-                :disabled="stateEnum[pollInfoOnChain.state] != 'Ongoing'"
-                @click="castVote()"
-                >Vote</v-btn
-            >
-            <v-btn
-                class="mx-2"
-                v-if="
-                    browserWallet.getAddress() ==
-                        pollInfoOnChain.ownerAddress &&
-                    stateEnum[pollInfoOnChain.state] == 'Created'
-                "
-                @click="startPoll()"
-                prepend-icon="mdi-toggle-switch"
-                >Start Vote</v-btn
-            >
-            <v-btn
-                class="mx-2"
-                v-if="
-                    browserWallet.getAddress() ==
-                        pollInfoOnChain.ownerAddress &&
-                    stateEnum[pollInfoOnChain.state] == 'Ongoing'
-                "
-                @click="endPoll()"
-                prepend-icon="mdi-toggle-switch"
-                >End Vote</v-btn
-            >
+            <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="stateEnum[pollInfoOnChain.state] != 'Created'"
+                @click="joinPoll()">Join the vote</v-btn>
+            <v-btn class="mx-2" :disabled="stateEnum[pollInfoOnChain.state] != 'Ongoing'" @click="castVote()">Vote</v-btn>
+            <v-btn class="mx-2" v-if="
+                browserWallet.getAddress() ==
+                pollInfoOnChain.ownerAddress &&
+                stateEnum[pollInfoOnChain.state] == 'Created'
+            " @click="startPoll()" prepend-icon="mdi-toggle-switch">Start Vote</v-btn>
+            <v-btn class="mx-2" v-if="
+                browserWallet.getAddress() ==
+                pollInfoOnChain.ownerAddress &&
+                stateEnum[pollInfoOnChain.state] == 'Ongoing'
+            " @click="endPoll()" prepend-icon="mdi-toggle-switch">End Vote</v-btn>
         </div>
     </v-card>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import * as eccryptoJS from 'eccrypto-js'
 import { Buffer } from 'buffer'
@@ -136,6 +86,13 @@ const voteRules = [
 ]
 
 const stateEnum = ['Created', 'Ongoing', 'Ended']
+
+const voteTextfieldDisabled = ref(false)
+
+onMounted(async () => {
+    // const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
+
+})
 
 const pollInfoOnChain = reactive({
     ownerAddress: '',
@@ -224,14 +181,14 @@ const castVote = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
-    
+
     const data = '123123'
 
     // Proof Generation
     let fullProof: FullProof
     fullProof = await generateProof(identity, group, pollId, Buffer.from(data))
 
-    
+
 
     await StarVoting.castVote(
         data,
@@ -244,7 +201,7 @@ const castVote = async () => {
     // localStorage.removeItem("identity")
 }
 
-const endPoll = async () => {}
+const endPoll = async () => { }
 
 const startPoll = async () => {
     const keyPair = await generateKeyPair()
