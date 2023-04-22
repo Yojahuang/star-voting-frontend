@@ -3,7 +3,7 @@ import Navbar from '@/components/Navbar.vue'
 import { onMounted } from 'vue'
 import { useGlobalStore } from '@/stores/Global'
 import { storeToRefs } from 'pinia'
-import { chainName } from '@/composables/plaw'
+import { chainName } from '@/composables/EtherLog'
 
 onMounted(() => {
     const { selectedChain } = storeToRefs(useGlobalStore())

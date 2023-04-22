@@ -56,9 +56,9 @@ const flipcard = (idx: number) => {
 
         <div class="mx-auto w-100">
             <v-row dense>
-                <v-col v-for="(card, idx) in cards" :cols="card.flex" class="shrink">
+                <v-col v-for="(card, idx) in cards" :cols="card.flex" class="mx-auto">
                     <v-expand-transition>
-                        <v-card @click="flipcard(idx)" v-show="card.show" class="mx-4 my-4" elevation="21" width="400"
+                        <v-card @click="flipcard(idx)" v-show="card.show" class="mx-auto my-4" elevation="21" width="400"
                             height="300" variant="tonal">
                             <template v-if="card.showText">
                                 <div class="mx-auto w-75 h-100 d-flex align-center font-center">
