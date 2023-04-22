@@ -113,7 +113,7 @@ const inMemberGroup = async () => {
     const globalStore = useGlobalStore()
     const { selectedChain } = storeToRefs(globalStore)
 
-    const identityStr = localStorage.getItem('identity')
+    const identityStr = localStorage.getItem(`${pollId.toString()}_identity`)
     if (identityStr == null) return false
     const { commitment } = new Identity(identityStr)
 
@@ -202,7 +202,7 @@ const selectedVote = ref<number[]>([])
 const castVote = async () => {
     disableCount.value = disableCount.value + 1
 
-    const identityStr = localStorage.getItem('identity')
+    const identityStr = localStorage.getItem(`${pollId.toString()}_identity`)
     if (identityStr == undefined) return
 
     // Fetch group members to rebuild merkle tree
@@ -255,7 +255,7 @@ const castVote = async () => {
     )
 
     // Remove the identity from local storage
-    // localStorage.removeItem("identity")
+    // localStorage.removeItem(`${pollId.toString()}_identity`)
     disabledState.voteTextfield = true
     disableCount.value = disableCount.value - 1
 }
@@ -268,8 +268,8 @@ const startPoll = async () => {
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
     const privateKeyBase64 = keyPair.privateKey.toString('base64')
 
-    localStorage.setItem('publicKey', publicKeyBase64)
-    localStorage.setItem('privateKey', privateKeyBase64)
+    localStorage.setItem(`${pollId.toString()}_publicKey`, publicKeyBase64)
+    localStorage.setItem(`${pollId.toString()}_privateKey`, privateKeyBase64)
 
     const StarVoting = new StarVotingContract()
     StarVoting.init()
@@ -287,7 +287,7 @@ const endPoll = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
-    const privateKeyBase64 = localStorage.getItem('privateKey') || ''
+    const privateKeyBase64 = localStorage.getItem(`${pollId.toString()}}_privateKey`) || ''
 
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     await StarVoting.endPoll(pollId, privateKeyBase64)
@@ -300,7 +300,7 @@ const joinPoll = async () => {
     const identity = new Identity()
     const { trapdoor, nullifier, commitment } = identity
     // Send commitment to smart contract to join the group!
-    localStorage.setItem('identity', identity.toString())
+    localStorage.setItem(`${pollId.toString()}_identity`, identity.toString())
 
     const StarVoting = new StarVotingContract()
     StarVoting.init()
@@ -333,7 +333,7 @@ const parseRealtimeResult = async (): Promise<number[]> => {
             }
         }
         return result
-    } 
+    }
 
     const StarVoting = new StarVotingContract()
     StarVoting.init()
