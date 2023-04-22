@@ -118,7 +118,7 @@ const passcode = ref("t031")
 
 const route = useRoute()
 const routeId = route.params.id
-const pollId = ethers.BigNumber.from("0x" + routeId)
+const pollId = BigInt("0x" + routeId)
 
 let info: any = {}
 
@@ -152,7 +152,7 @@ const hasDecrypted = () => {
     return true
 }
 
-const castVote = async() => {
+const castVote = async () => {
     const identityStr = localStorage.getItem("identity")
     if (identityStr == undefined) return
 
@@ -168,7 +168,7 @@ const castVote = async() => {
     console.log(memberInGroup)
 
     group.addMembers(memberInGroup)
-    
+
     const data = "937ee12277092e3b340a74423bce8d7167e9e41a"
 
     let fullProof: FullProof
@@ -178,7 +178,7 @@ const castVote = async() => {
     StarVoting.init()
 
     console.log(pollId)
-    console.log(typeof(pollId))
+    console.log(typeof (pollId))
 
     await StarVoting.castVote(data, fullProof.externalNullifier, pollId, fullProof.proof);
 

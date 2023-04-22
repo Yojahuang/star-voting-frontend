@@ -149,7 +149,7 @@ const createVote = async () => {
 
     data.pollUuid = (ethers.utils.keccak256(utf8Encode.encode(uuid))).slice(2)
 
-    const uuidBigNumber = ethers.BigNumber.from("0x" + data.pollUuid)
+    const uuidBigNumber = BigInt("0x" + data.pollUuid)
 
     // Upload result to smart contract!
     const StarVoting = new StarVotingContract()

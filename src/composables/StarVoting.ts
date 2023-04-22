@@ -16,7 +16,7 @@ export default class StarVotingContract {
             this.starVotingContract = new ethers.Contract(this.address, contractABI, provider)
     }
 
-    getEncryptedPollInfo = async (pollId: ethers.BigNumber) => {
+    getEncryptedPollInfo = async (pollId: BigInt) => {
         if (this.starVotingContract == undefined) return
 
         let encryptedPollInfo
@@ -31,7 +31,7 @@ export default class StarVotingContract {
         return encryptedPollInfo
     }
 
-    createPoll = async (pollId: ethers.BigNumber, livePoll: boolean, isPrivate: boolean, encryptedInfo: string) => {
+    createPoll = async (pollId: BigInt, livePoll: boolean, isPrivate: boolean, encryptedInfo: string) => {
         const ethereum = (window as any).ethereum
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
         const signer = provider.getSigner()
@@ -44,19 +44,19 @@ export default class StarVotingContract {
         await this.starVotingContract.connect(signer).createPoll(pollId, coordinator, StarVotingContract.merkleTreeDepth, livePoll, isPrivate, encryptedInfo, this.option)
     }
 
-    getPollCoordinator = async (pollId: ethers.BigNumber) => {
+    getPollCoordinator = async (pollId: BigInt) => {
         if (this.starVotingContract == null) return null
 
         return await this.starVotingContract.getPollCoordinator(pollId)
     }
 
-    getPollState = async (pollId: ethers.BigNumber) => {
+    getPollState = async (pollId: BigInt) => {
         if (this.starVotingContract == null) return null
 
         return await this.starVotingContract.getPollState(pollId)
     }
 
-    addVoter = async (pollId: ethers.BigNumber, commitment: bigint) => {
+    addVoter = async (pollId: BigInt, commitment: bigint) => {
         const ethereum = (window as any).ethereum
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
         const signer = provider.getSigner()
@@ -66,7 +66,7 @@ export default class StarVotingContract {
         await this.starVotingContract.connect(signer).addVoter(pollId, commitment, this.option)
     }
 
-    startPoll = async (pollId: ethers.BigNumber, encryptionKey: string) => {
+    startPoll = async (pollId: BigInt, encryptionKey: string) => {
         const ethereum = (window as any).ethereum
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
         const signer = provider.getSigner()
