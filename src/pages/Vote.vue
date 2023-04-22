@@ -50,6 +50,18 @@
             " @click="endPoll()" prepend-icon="mdi-toggle-switch">End Vote</v-btn>
         </div>
     </v-card>
+
+    <v-dialog v-model="showLoadingCircle">
+        <v-card class="mx-auto" width="300" height="300">
+            <div class="d-flex w-100 h-100 align-center">
+                <div class="w-100 mx-auto">
+                    <v-progress-circular :size="100" class="mx-auto w-100 my-2" indeterminate color="#f4dde9">
+                    </v-progress-circular>
+                    <div class="my-2 text-center">Waiting for block confirmation. <br />(Ex: on-chain query)</div>
+                </div>
+            </div>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -92,6 +104,10 @@ const stateEnum = ['Created', 'Ongoing', 'Ended']
 const disabledState = reactive({
     voteTextfield: false,
     joinVote: false
+})
+
+const showLoadingCircle = computed(() => {
+    return disableCount.value > 0
 })
 
 const calculateVoteTextfieldDisabled = async () => {

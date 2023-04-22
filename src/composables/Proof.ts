@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import * as snarkjs from '../assets/snarkjs.js'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Hexable, zeroPad } from '@ethersproject/bytes'

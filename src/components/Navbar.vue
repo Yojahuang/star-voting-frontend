@@ -1,64 +1,28 @@
 <template>
-    <div
-        class="d-flex justify-space-between align-center w-100"
-        style="height: 50px; background-color: #3f51b5"
-    >
+    <div class="d-flex justify-space-between align-center w-100" style="height: 50px; background-color: #3f51b5">
         <div class="d-flex justify-start align-center">
-            <div class="mx-2 text-white text-button">
+            <div class="ml-5 mr-2 text-white text-button">
                 <b @click="navigateTo('')">Star Voting</b>
             </div>
-            <v-btn
-                class="mx-2 text-white"
-                variant="text"
-                @click="navigateTo('addvote')"
-                >Votes</v-btn
-            >
-            <v-btn
-                class="mx-2 text-white"
-                variant="text"
-                @click="navigateTo('roadmap')"
-                >Roadmap</v-btn
-            >
+            <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('addvote')">Votes</v-btn>
+            <v-btn class="mx-2 text-white" variant="text" @click="navigateTo('roadmap')">Roadmap</v-btn>
         </div>
         <div class="d-flex justify-start align-center">
-            <v-btn
-                class="mx-2 text-white"
-                @click="toggleTheme()"
-                icon="mdi-theme-light-dark"
-                variant="text"
-            ></v-btn>
+            <v-btn class="mx-2 text-white" @click="toggleTheme()" icon="mdi-theme-light-dark" variant="text"></v-btn>
 
-            <v-select
-                class="mx-2 text-white"
-                v-model="selectedChain"
-                :items="[
-                    'ThunderCore Testnet',
-                    'Linea Testnet',
-                    'Chiado(Gnosis) testnet',
-                ]"
-                hide-details="auto"
-                density="comfortable"
-            ></v-select>
+            <v-select class="mx-2 text-white" v-model="selectedChain" :items="[
+                'ThunderCore Testnet',
+                'Linea Testnet',
+                'Chiado(Gnosis) testnet',
+            ]" hide-details="auto" density="comfortable"></v-select>
 
             <v-chip class="mx-2 text-white" v-if="address != ''">{{
                 beautifyAddress()
             }}</v-chip>
-            <v-btn
-                class="mx-2"
-                v-if="address == ''"
-                @click="connectWallet()"
-                variant="outlined"
-                color="secondary"
-                >Connect</v-btn
-            >
-            <v-btn
-                class="mx-2"
-                v-if="address != ''"
-                @click="disconnectWallet()"
-                variant="outlined"
-                color="warning"
-                >Disconnect</v-btn
-            >
+            <v-btn class="mx-2" v-if="address == ''" @click="connectWallet()" variant="outlined"
+                color="secondary">Connect</v-btn>
+            <v-btn class="ml-2 mr-5" v-if="address != ''" @click="disconnectWallet()" variant="outlined"
+                color="warning">Disconnect</v-btn>
         </div>
     </div>
     <v-divider class="mb-6"></v-divider>
