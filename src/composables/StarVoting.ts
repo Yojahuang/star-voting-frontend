@@ -86,8 +86,8 @@ export default class StarVotingContract {
 
         if (this.starVotingContract == undefined) return
 
-        await this.starVotingContract.connect(signer).castVote(vote, nullifierHash, pollId, proof, this.option)
-
+        const tx = await this.starVotingContract.connect(signer).castVote(vote, nullifierHash, pollId, proof, this.option)
+        const receipt = await tx.wait()
+        console.log(receipt)
     }
-
 }
