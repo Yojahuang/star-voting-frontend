@@ -56,16 +56,17 @@ import AES from 'crypto-js/aes';
 import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
 import { Identity } from "@semaphore-protocol/identity"
+import { Group } from "@semaphore-protocol/group"
 
 import StarVotingContract from "@/composables/StarVoting"
 import BrowserWallet from "@/composables/wallet"
+import { getGroupMembers } from '@/composables/Group'
 
 import { useGlobalStore } from '@/stores/Global';
 
 import * as eccryptoJS from 'eccrypto-js';
 import { Buffer } from 'buffer';
 
-import { getGroupMembers } from '@/composables/Group'
 
 import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -159,8 +160,11 @@ const castVote = async() => {
 
     // Fetch group members to rebuild merkle tree
     const globalStore = useGlobalStore()
-    const {selectedChain} = storeToRefs(globalStore)
-    getGroupMembers(selectedChain, pollId.toString())
+    const { selectedChain } = storeToRefs(globalStore)
+
+    const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
+    console.log(memberInGroup)
+
 
     // Remove the identity from local storage
     // localStorage.removeItem("identity")
