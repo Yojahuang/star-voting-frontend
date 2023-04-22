@@ -171,7 +171,7 @@ const getPollEndedEvent = async (contract: ethers.Contract, startBlock: number, 
 };
 
 
-type chainName = "Linea Testnet" | "ThunderCore Testnet" | "Chiado(Gnosis) testnet"
+export type chainName = "Linea Testnet" | "ThunderCore Testnet" | "Chiado(Gnosis) testnet"
 
 // 1. wait for star's address to fill in
 // 2. find provider url -> not really sure
@@ -202,7 +202,6 @@ const getBlockNumber = async (provider: any) => {
 type event = "GroupCreated" | "MemberAdded" | "MemberUpdated" | "MemberRemoved" | "PollCreated" | "PollStarted" | "VoteAdded" | "PollEnded";
 
 const getEvents = async (chainName: chainName, eventName: event) => {
-    console.log(chainName, eventName)
     const { contract, startBlock, provider } = getContract(chainName);
 
     const endBlock = await getBlockNumber(provider);
@@ -244,4 +243,4 @@ const getEvents = async (chainName: chainName, eventName: event) => {
 
 };
 
-export { getEvents, type chainName };
+export { getEvents };
