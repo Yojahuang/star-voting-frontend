@@ -5,7 +5,7 @@ import BrowserWallet from "@/composables/wallet"
 export default class StarVotingContract {
     address = "0xAC3d9886750b7Ac602E0900aAb13F597910F4700"
     starVotingContract: ethers.Contract | undefined = undefined
-    option = { gasLimit: 100000000 }
+    option = { gasLimit: 100_000_000 }
 
     init = () => {
         const ethereum = (window as any).ethereum

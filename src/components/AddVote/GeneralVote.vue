@@ -149,7 +149,7 @@ const createVote = async () => {
     // Upload result to smart contract!
     const StarVoting = new StarVotingContract()
     StarVoting.init()
-    await StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, data.publicVote, JSON.stringify(voteData))
+    await StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, !data.publicVote, JSON.stringify(voteData))
 
     // Show share link to coordinator
     data.shareVotelinkDialog = true
