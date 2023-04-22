@@ -181,7 +181,7 @@ const createVote = async () => {
             if (uuidBigNumber.toString() == pollId) {
                 shouldBeDisabled.value = false
                 data.shareVotelinkDialog = true
-                data.voteLink = window.location.origin + `/vote/${data.pollUuid}`
+                data.voteLink = window.location.origin + `/vote/${data.pollUuid}/${data.passcode}`
                 clearInterval(timer);
             }
         }

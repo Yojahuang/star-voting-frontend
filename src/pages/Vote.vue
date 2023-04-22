@@ -1,11 +1,5 @@
 <template>
-    <div class="mx-auto w-75">
-        <div v-if="passcodeDialog">
-            <v-text-field autofocus v-model="passcode" @keyup.enter="decryptPollDetail" label="Passcode"></v-text-field>
-        </div>
-    </div>
-
-    <v-card :disabled="passcodeDialog > 0" :loading="passcodeDialog > 0" variant="tonal" class="mx-auto w-75">
+    <v-card :disabled="disableCount > 0" :loading="disableCount > 0" variant="tonal" class="mx-auto w-75">
         <div class="text-h3 mx-4 my-4">{{ payload.title }}</div>
 
         <div class="mx-4 my-4">{{ payload.description }}</div>
@@ -158,13 +152,12 @@ const getOwnerOfVoteFromBlockchain = async () => {
 
 const browserWallet = new BrowserWallet()
 
-const passcodeDialog = ref(2)
-
-const passcode = ref('t031')
+const disableCount = ref(2)
 
 const route = useRoute()
 const routeId = route.params.id
 const pollId = BigInt('0x' + routeId)
+const passcode: string = (route.params.passcode) as any
 
 let pollInfo: any = {}
 
@@ -181,7 +174,8 @@ onMounted(async () => {
     disabledState.joinVote = await calculateJoinVoteDisabled()
     disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
 
-    passcodeDialog.value = passcodeDialog.value - 1
+    disableCount.value = disableCount.value - 1
+    decryptPollDetail()
 })
 
 const payload = ref({
@@ -195,6 +189,8 @@ const payload = ref({
 const vote = ref<number[]>([])
 
 const castVote = async () => {
+    disableCount.value = disableCount.value + 1
+
     const identityStr = localStorage.getItem('identity')
     if (identityStr == undefined) return
 
@@ -220,9 +216,9 @@ const castVote = async () => {
 
     // Pack vote data as [index0, voteCount0, index1, voteCount1, ...]
     let dataByteArray = new Uint8Array(vote.value.length * 2)
-    for (let i = 0; i < vote.value.length; i+=2) {
+    for (let i = 0; i < vote.value.length; i += 2) {
         dataByteArray[i] = i;
-        dataByteArray[i+1] = vote.value[i]
+        dataByteArray[i + 1] = vote.value[i]
     }
 
     // If this isn't a realtime poll, encrypt the vote data
@@ -242,7 +238,7 @@ const castVote = async () => {
     const voteData = serializedData.toString('base64')
 
     fullProof = await generateProof(identity, group, pollId, Buffer.from(voteData))
-    
+
     await StarVoting.castVote(
         voteData,
         fullProof.nullifierHash,
@@ -252,11 +248,14 @@ const castVote = async () => {
 
     // Remove the identity from local storage
     // localStorage.removeItem("identity")
+    disableCount.value = disableCount.value - 1
 }
 
 const endPoll = async () => { }
 
 const startPoll = async () => {
+    disableCount.value = disableCount.value + 1
+
     const keyPair = await generateKeyPair()
 
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
@@ -269,9 +268,13 @@ const startPoll = async () => {
     StarVoting.init()
 
     await StarVoting.startPoll(pollId, publicKeyBase64)
+
+    disableCount.value = disableCount.value - 1
 }
 
 const joinPoll = async () => {
+    disableCount.value = disableCount.value + 1
+
     const identity = new Identity()
     const { trapdoor, nullifier, commitment } = identity
     // Send commitment to smart contract to join the group!
@@ -281,6 +284,8 @@ const joinPoll = async () => {
     StarVoting.init()
 
     await StarVoting.addVoter(pollId, commitment)
+
+    disableCount.value = disableCount.value - 1
 }
 
 const parseRealtimeResult = (): number[] => {
@@ -356,7 +361,7 @@ const remainVoteFontColor = () => {
 
 const decryptPollDetail = () => {
     console.log(pollInfo)
-    const bytePayload = AES.decrypt(pollInfo.payload, passcode.value)
+    const bytePayload = AES.decrypt(pollInfo.payload, passcode)
     try {
         pollInfo.payload = JSON.parse(bytePayload.toString(encUtf8))
 
@@ -368,7 +373,7 @@ const decryptPollDetail = () => {
         return
     }
 
-    passcodeDialog.value = passcodeDialog.value - 1
+    disableCount.value = disableCount.value - 1
     setupChart()
 }
 </script>

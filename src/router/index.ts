@@ -11,7 +11,7 @@ let routes = [
         component: Home,
     },
     {
-        path: '/vote/:id',
+        path: '/vote/:id/:passcode',
         name: 'Vote',
         component: Vote,
     },
