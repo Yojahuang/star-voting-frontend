@@ -124,6 +124,18 @@ export default class StarVotingContract {
             .startPoll(pollId, encryptionKey, this.option)
     }
 
+    endPoll = async (pollId: BigInt, decryptionKey: string) => {
+        const ethereum = (window as any).ethereum
+        const provider = new ethers.providers.Web3Provider(ethereum, 'any')
+        const signer = provider.getSigner()
+
+        if (this.starVotingContract == undefined) return
+
+        await this.starVotingContract
+            .connect(signer)
+            .endPoll(pollId, decryptionKey, this.option)
+    }
+
     castVote = async (
         vote: string,
         nullifierHash: BigNumberish,

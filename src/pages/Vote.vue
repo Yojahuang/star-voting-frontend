@@ -52,7 +52,6 @@
 import { useRoute } from 'vue-router'
 import { ref, reactive, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import * as eccryptoJS from 'eccrypto-js'
 import { Buffer } from 'buffer'
 import { useGlobalStore } from '@/stores/Global'
 
@@ -71,6 +70,7 @@ import { generateProof } from '@/composables/Proof'
 import StarVotingContract from '@/composables/StarVoting'
 import BrowserWallet from '@/composables/wallet'
 import { getGroupMembers } from '@/composables/Group'
+import { getEvents } from '@/composables/EtherLog'
 import { encryptMessage, decryptMessage, generateKeyPair } from '@/composables/Crypto'
 
 const voteRules = [
@@ -175,7 +175,7 @@ onMounted(async () => {
     disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
 
     disableCount.value = disableCount.value - 1
-    decryptPollDetail()
+    await decryptPollDetail()
 })
 
 const payload = ref({
@@ -251,8 +251,6 @@ const castVote = async () => {
     disableCount.value = disableCount.value - 1
 }
 
-const endPoll = async () => { }
-
 const startPoll = async () => {
     disableCount.value = disableCount.value + 1
 
@@ -272,6 +270,15 @@ const startPoll = async () => {
     disableCount.value = disableCount.value - 1
 }
 
+const endPoll = async () => {
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+
+    const privateKeyBase64 = localStorage.getItem('privateKey') || ''
+
+    await StarVoting.endPoll(pollId, privateKeyBase64)
+}
+
 const joinPoll = async () => {
     disableCount.value = disableCount.value + 1
 
@@ -288,7 +295,20 @@ const joinPoll = async () => {
     disableCount.value = disableCount.value - 1
 }
 
-const parseRealtimeResult = (): number[] => {
+const parseRealtimeResult = async (): Promise<number[]> => {
+    const globalStore = useGlobalStore()
+    const { selectedChain } = storeToRefs(globalStore)
+
+    const voteAddedEvents: any = await getEvents(selectedChain.value, 'VoteAdded')
+    const filteredVoteAddedEvents = voteAddedEvents.reduce((acc: any, cur: any) => {
+        if (cur.pollId == pollId.toString()) {
+            acc.push(cur)
+        }
+        return acc
+    }, [])
+
+    console.log(filteredVoteAddedEvents)
+
     const result: number[] = []
     if (pollInfo.showRealtimeResult == true) {
         for (let i = 0; i < payload.value.options.length; i++) result.push(10)
@@ -301,7 +321,7 @@ const parseRealtimeResult = (): number[] => {
     return result
 }
 
-const setupChart = () => {
+const setupChart = async () => {
     let myChart = echarts.init(document.getElementById('echart') as any)
     const option = {
         xAxis: {
@@ -313,7 +333,7 @@ const setupChart = () => {
         },
         series: [
             {
-                data: parseRealtimeResult(),
+                data: await parseRealtimeResult(),
                 type: 'bar',
             },
         ],
@@ -359,7 +379,7 @@ const remainVoteFontColor = () => {
     }
 }
 
-const decryptPollDetail = () => {
+const decryptPollDetail = async () => {
     console.log(pollInfo)
     const bytePayload = AES.decrypt(pollInfo.payload, passcode)
     try {
@@ -374,6 +394,6 @@ const decryptPollDetail = () => {
     }
 
     disableCount.value = disableCount.value - 1
-    setupChart()
+    await setupChart()
 }
 </script>
