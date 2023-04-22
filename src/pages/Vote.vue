@@ -179,7 +179,7 @@ const getOwnerOfVoteFromBlockchain = async () => {
 
 const browserWallet = new BrowserWallet()
 
-const disableCount = ref(2)
+const disableCount = ref(0)
 
 const route = useRoute()
 const routeId = route.params.id
@@ -197,15 +197,7 @@ const getInfo = async () => {
 }
 
 onMounted(async () => {
-    await getInfo()
-    await getOwnerOfVoteFromBlockchain()
-    await getStateFromBlockchain()
-
-    disabledState.joinVote = await calculateJoinVoteDisabled()
-    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
-
-    disableCount.value = disableCount.value - 1
-    await decryptPollDetail()
+    await refresh()
 })
 
 const refresh = async () => {
@@ -218,8 +210,8 @@ const refresh = async () => {
     disabledState.joinVote = await calculateJoinVoteDisabled()
     disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
 
-    disableCount.value = disableCount.value - 1
     await decryptPollDetail()
+    disableCount.value = disableCount.value - 1
 }
 
 const payload = ref({
@@ -301,6 +293,9 @@ const castVote = async () => {
     // Remove the identity from local storage
     // localStorage.removeItem(`${pollId.toString()}_identity`)
     disabledState.voteTextfield = true
+
+    await refresh()
+
     disableCount.value = disableCount.value - 1
 }
 
@@ -328,6 +323,8 @@ const startPoll = async () => {
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     disableCount.value = disableCount.value - 1
 
+    await refresh()
+
     disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
     disabledState.joinVote = true
 }
@@ -347,6 +344,8 @@ const endPoll = async () => {
 
     disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
 
+    await refresh()
+
     disableCount.value = disableCount.value - 1
 }
 
@@ -363,6 +362,9 @@ const joinPoll = async () => {
 
     await StarVoting.addVoter(pollId, commitment)
     disabledState.joinVote = true
+
+    await refresh()
+
     disableCount.value = disableCount.value - 1
 }
 
@@ -489,6 +491,7 @@ const remainVoteFontColor = () => {
 }
 
 const decryptPollDetail = async () => {
+    disableCount.value = disableCount.value + 1
     const bytePayload = AES.decrypt(pollInfo.payload, passcode)
     try {
         pollInfo.payload = JSON.parse(bytePayload.toString(encUtf8))
@@ -502,7 +505,7 @@ const decryptPollDetail = async () => {
         return
     }
 
-    disableCount.value = disableCount.value - 1
     await setupChart()
+    disableCount.value = disableCount.value - 1
 }
 </script>
