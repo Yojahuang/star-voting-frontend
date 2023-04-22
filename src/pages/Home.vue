@@ -35,7 +35,7 @@ const cards = reactive([
         text: "Quadratic voting can raise public awareness of different voting topics, as the way an individual allocates one's voting resources can result in diverse outcomes. To promote public attention to public issues, we have included quadratic voting as a voting option.",
         icon: 'mdi-bullhorn-variant',
         show: true,
-        showText: true,
+        showText: false,
         flex: 6
     },
 ])
@@ -87,15 +87,4 @@ const flipcard = (idx: number) => {
     </div>
 </template>
 
-<style scoped>
-.landing-card {
-    font-size: 17px;
-    height: 200px;
-    width: 300px;
-}
-
-#my-page {
-    max-width: 1200px;
-    margin: 10 auto;
-}
-</style>
+<style scoped></style>
