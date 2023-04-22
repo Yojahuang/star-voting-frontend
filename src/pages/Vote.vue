@@ -21,9 +21,7 @@
             <template v-for="(option, index) in payload.options">
                 <div class="d-flex align-center w-100 mx-auto justify-start">
                     <div class="mx-2">{{ option }}</div>
-                    <v-text-field class="w-auto mx-2" :rules="[(value: number) => {
-                        return !Number.isNaN(value) && value >= 0
-                    }]" :disable="true" hide-details="auto" v-model="vote[index]">
+                    <v-text-field class="w-auto mx-2" :rules="voteRules" hide-details="auto" v-model="vote[index]">
                         <template #prepend-inner><v-icon @click="decreaseVote(index)" icon="mdi-minus"></v-icon></template>
                         <template #append-inner><v-icon @click="increaseVote(index)" icon="mdi-plus"></v-icon></template>
                     </v-text-field>
@@ -66,6 +64,14 @@ import * as eccryptoJS from 'eccrypto-js';
 import { Buffer } from 'buffer';
 
 import { onMounted } from 'vue';
+
+const voteRules = [(value: string) => {
+    console.log(vote.value)
+    if (Number(value) < 0) return "Can't be negative"
+    if (Number.isNaN(Number(value))) return "Please input a number"
+    if (calculateRemainVote() < 0) return "Remain vote < 0"
+    return true
+},]
 
 const stateEnum = ["Created", "Ongoing", "Ended"]
 
