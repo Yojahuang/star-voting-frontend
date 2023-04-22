@@ -1,25 +1,27 @@
 <template>
     <div class="mx-auto w-75">
-        <div v-if="!hasDecrypted()">
+        <div v-if="passcodeDialog">
             <v-text-field autofocus v-model="passcode" @keyup.enter="decrypt" label="Passcode"></v-text-field>
         </div>
+    </div>
 
-        <div class="text-h3 my-4">{{ payload.title }}</div>
+    <v-card :disabled="passcodeDialog" variant="tonal" class="mx-auto w-75">
+        <div class="text-h3 mx-4 my-4">{{ payload.title }}</div>
 
-        <div class="my-4">{{ payload.description }}</div>
+        <div class="mx-4 my-4">{{ payload.description }}</div>
 
-        <div v-show="info.showRealtimeResult" class="mx-auto my-4" style="width: 600px;height:400px;" id="echart">
+        <div v-show="info.showRealtimeResult" class="mx-auto mx-4 my-4" style="width: 600px;height:400px;" id="echart">
         </div>
 
-        <div class="font-weight-thin">Your remaining votes: <p class="font-weight-bold d-inline"
+        <div class="font-weight-thin mx-4 my-4">Your remaining votes: <p class="font-weight-bold d-inline"
                 :style="{ color: remainVoteFontColor() }">{{ calculateRemainVote() }}
             </p>
         </div>
 
 
-        <div class="my-4">
+        <div class="mx-4 my-4">
             <template v-for="(option, index) in payload.options">
-                <div class="d-flex align-center w-100 mx-auto justify-start">
+                <div class="mx-4 my-4 d-flex align-center w-100 mx-auto justify-start">
                     <div class="mx-2">{{ option }}</div>
                     <v-text-field class="w-auto mx-2" :rules="voteRules" hide-details="auto" v-model="vote[index]">
                         <template #prepend-inner><v-icon @click="decreaseVote(index)" icon="mdi-minus"></v-icon></template>
@@ -31,7 +33,7 @@
         </div>
         <v-divider></v-divider>
 
-        <div class="d-flex my-4">
+        <div class="d-flex mx-4 my-4">
             <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="stateEnum[voteInfoOnChain.state] != 'Created'"
                 @click="joinVote()">Join
                 the vote</v-btn>
@@ -45,12 +47,12 @@
                 @click="endVote()" prepend-icon="mdi-toggle-switch">End
                 Vote</v-btn>
         </div>
-    </div>
+    </v-card>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { ref, reactive, onMounted } from "vue"
+import { ref, computed, reactive, onMounted } from "vue"
 import { storeToRefs } from 'pinia';
 import * as eccryptoJS from 'eccrypto-js';
 import { Buffer } from 'buffer';
@@ -61,7 +63,6 @@ import encUtf8 from 'crypto-js/enc-utf8'
 import * as echarts from 'echarts';
 
 // ZK Dependencies
-import { ethers } from "ethers"
 import { Identity } from "@semaphore-protocol/identity"
 import { Group } from "@semaphore-protocol/group"
 import { FullProof } from "@semaphore-protocol/proof";
@@ -70,7 +71,6 @@ import { generateProof } from "@/composables/Proof"
 import StarVotingContract from "@/composables/StarVoting"
 import BrowserWallet from "@/composables/wallet"
 import { getGroupMembers } from '@/composables/Group'
-
 
 const voteRules = [(value: string) => {
     console.log(vote.value)
@@ -141,16 +141,6 @@ const payload = ref({
     useQuadratic: false,
 })
 const vote = ref<number[]>([])
-
-const hasDecrypted = () => {
-    try {
-        const checklist = [info.payload.title, info.payload.description, info.payload.options, info.payload.voteCount]
-        for (let i = 0; i < checklist.length; ++i) if (checklist[i] == undefined) return false
-    } catch (error) {
-        return false
-    }
-    return true
-}
 
 const castVote = async () => {
     const identityStr = localStorage.getItem("identity")
@@ -293,17 +283,9 @@ const decrypt = () => {
     const bytePayload = AES.decrypt(info.payload, passcode.value)
     try {
         info.payload = JSON.parse(bytePayload.toString(encUtf8))
-        console.log(info.payload.title)
-        console.log(info.payload.description)
-        console.log(info.payload.options)
-        console.log(info.payload.voteCount)
-        console.log(info.payload.useQuadratic)
 
         payload.value = info.payload
-
         for (let i = 0; i < info.payload.options.length; ++i) vote.value.push(0)
-
-        console.log(info.payload)
     } catch (error) {
         alert('Passcode is wrong!')
         console.log(error)
