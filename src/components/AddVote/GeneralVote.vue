@@ -74,7 +74,12 @@ import AES from 'crypto-js/aes';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from "ethers"
 import StarVotingContract from "@/composables/StarVoting"
+import { useGlobalStore } from "@/stores/Global";
+import { storeToRefs } from "pinia";
 
+import { getEvents } from "@/composables/plaw";
+
+const { shouldBeDisabled, selectedChain } = storeToRefs(useGlobalStore())
 
 const data = reactive({
     title: "",
@@ -151,9 +156,27 @@ const createVote = async () => {
     StarVoting.init()
     await StarVoting.createPoll(uuidBigNumber, data.showRealtimeResult, !data.publicVote, JSON.stringify(voteData))
 
-    // Show share link to coordinator
-    data.shareVotelinkDialog = true
-    data.voteLink = window.location.origin + `/vote/${data.pollUuid}`
+    const contract = StarVoting.starVotingContract
+
+    if (contract == null) {
+        return;
+    }
+
+    shouldBeDisabled.value = true
+
+    const timer = setInterval(async () => {
+        const events: any = await getEvents(selectedChain.value, "PollCreated")
+        console.log(events)
+        for (let i = 0; i < events.length; ++i) {
+            const pollId = events[i].pollId
+            if (uuidBigNumber.toString() == pollId) {
+                shouldBeDisabled.value = false
+                data.shareVotelinkDialog = true
+                data.voteLink = window.location.origin + `/vote/${data.pollUuid}`
+                clearInterval(timer);
+            }
+        }
+    }, 3000);
 }
 </script>
 

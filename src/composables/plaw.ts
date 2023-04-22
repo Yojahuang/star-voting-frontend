@@ -202,6 +202,7 @@ const getBlockNumber = async (provider: any) => {
 type event = "GroupCreated" | "MemberAdded" | "MemberUpdated" | "MemberRemoved" | "PollCreated" | "PollStarted" | "VoteAdded" | "PollEnded";
 
 const getEvents = async (chainName: chainName, eventName: event) => {
+    console.log(chainName, eventName)
     const { contract, startBlock, provider } = getContract(chainName);
 
     const endBlock = await getBlockNumber(provider);

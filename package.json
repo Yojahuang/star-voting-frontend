@@ -7,8 +7,15 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "dev-host": "vite --host"
+    "dev-host": "vite --host",
+    "buildesm": "rollup -c config/rollup.esm.config.js",
+    "buildbrowser": "BROWSER=true rollup -c config/rollup.browser.config.js",
   },
+  "node": {
+    "import": "./main.js",
+    "require": "./build/main.cjs"
+  },
+  "default": "./build/snarkjs.js",
   "dependencies": {
     "@semaphore-protocol/group": "^3.7.0",
     "@semaphore-protocol/identity": "^3.7.0",

@@ -6,6 +6,8 @@ export const useGlobalStore = defineStore('global', () => {
     type chain = "ThunderCore Testnet" | "Linea Testnet" | "Chiado(Gnosis) testnet"
     const selectedChain = ref<chain>('ThunderCore Testnet')
 
+    const shouldBeDisabled = ref(false)
+
     const chainInfoMap = {
         "ThunderCore Testnet": {
             chainId: 18,
@@ -42,5 +44,5 @@ export const useGlobalStore = defineStore('global', () => {
         await wallet.switchChain(chainInfo.chainId, chainInfo.rpcUrl, selectedChain.value, chainInfo.nativeCurrency)
     })
 
-    return { selectedChain, chainInfoMap }
+    return { selectedChain, chainInfoMap, shouldBeDisabled }
 })
