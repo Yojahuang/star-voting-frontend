@@ -20,7 +20,7 @@
                 <div class="mx-4 my-4 d-flex align-center w-100 mx-auto justify-start">
                     <div class="mx-2">{{ option }}</div>
                     <v-text-field class="w-auto mx-2" :disabled="disabledState.voteTextfield" :rules="voteRules"
-                        hide-details="auto" v-model="vote[index]">
+                        hide-details="auto" v-model="selectedVote[index]">
                         <template #prepend-inner><v-icon @click="decreaseVote(index)" icon="mdi-minus"></v-icon></template>
                         <template #append-inner><v-icon @click="increaseVote(index)" icon="mdi-plus"></v-icon></template>
                     </v-text-field>
@@ -75,7 +75,7 @@ import { encryptMessage, decryptMessage, generateKeyPair } from '@/composables/C
 
 const voteRules = [
     (value: string) => {
-        console.log(vote.value)
+        console.log(selectedVote.value)
         if (Number(value) < 0) return "Can't be negative"
         if (Number.isNaN(Number(value))) return 'Please input a number'
         if (calculateRemainVote() < 0) return 'Remain vote < 0'
@@ -186,7 +186,7 @@ const payload = ref({
     useQuadratic: false,
 })
 
-const vote = ref<number[]>([])
+const selectedVote = ref<number[]>([])
 
 const castVote = async () => {
     disableCount.value = disableCount.value + 1
@@ -215,10 +215,10 @@ const castVote = async () => {
     StarVoting.init()
 
     // Pack vote data as [index0, voteCount0, index1, voteCount1, ...]
-    let dataByteArray = new Uint8Array(vote.value.length * 2)
-    for (let i = 0; i < vote.value.length; i += 2) {
-        dataByteArray[i] = i;
-        dataByteArray[i + 1] = vote.value[i]
+    let dataByteArray = new Uint8Array(selectedVote.value.length * 2)
+    for (let i = 0, cur = 0; i < selectedVote.value.length; i += 1, cur += 2) {
+        dataByteArray[cur] = i;
+        dataByteArray[cur + 1] = selectedVote.value[i]
     }
 
     // If this isn't a realtime poll, encrypt the vote data
@@ -230,7 +230,7 @@ const castVote = async () => {
 
         serializedData = Buffer.from(BSON.serialize(encryptedData))
     } else {    // If this is a realtime poll, don't encrypt the vote data
-        serializedData = Buffer.from(BSON.serialize(dataByteArray))
+        serializedData = Buffer.from(dataByteArray)
     }
 
     // Proof Generation
@@ -309,9 +309,17 @@ const parseRealtimeResult = async (): Promise<number[]> => {
 
     console.log(filteredVoteAddedEvents)
 
-    const result: number[] = []
+    const result: number[] = [];
+    for (let i = 0; i < payload.value.options.length; i++) result.push(0)
+
     if (pollInfo.showRealtimeResult == true) {
-        for (let i = 0; i < payload.value.options.length; i++) result.push(10)
+        for (const voteData of filteredVoteAddedEvents) {
+            const voteDataArray = Uint8Array.from(Buffer.from(voteData.vote, 'base64'))
+            console.log(voteDataArray)
+            for (let i = 0; i < voteDataArray.length; i += 2) {
+                result[voteDataArray[i]] += voteDataArray[i + 1]
+            }
+        }
     } else {
         for (let i = 0; i < payload.value.options.length; i++) result.push(0)
     }
@@ -343,18 +351,18 @@ const setupChart = async () => {
 }
 
 const decreaseVote = (index: number) => {
-    vote.value[index]--
+    selectedVote.value[index]--
 
-    if (vote.value[index] < 0) {
-        vote.value[index]++
+    if (selectedVote.value[index] < 0) {
+        selectedVote.value[index]++
     }
 }
 
 const increaseVote = (index: number) => {
-    vote.value[index]++
+    selectedVote.value[index]++
 
     if (calculateRemainVote() < 0) {
-        vote.value[index]--
+        selectedVote.value[index]--
     }
 }
 
@@ -364,7 +372,7 @@ const calculateRemainVote = () => {
     let ans = payload.value.voteCount
 
     for (let i = 0; i < payload.value.options.length; ++i) {
-        let cost = vote.value[i]
+        let cost = selectedVote.value[i]
         if (pollInfo.useQuadratic) cost = cost * cost
         ans = ans - cost
     }
@@ -386,7 +394,7 @@ const decryptPollDetail = async () => {
         pollInfo.payload = JSON.parse(bytePayload.toString(encUtf8))
 
         payload.value = pollInfo.payload
-        for (let i = 0; i < pollInfo.payload.options.length; ++i) vote.value.push(0)
+        for (let i = 0; i < pollInfo.payload.options.length; ++i) selectedVote.value.push(0)
     } catch (error) {
         alert('Passcode is wrong!')
         console.log(error)
