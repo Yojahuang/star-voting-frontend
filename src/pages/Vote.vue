@@ -5,7 +5,7 @@
         </div>
     </div>
 
-    <v-card :disabled="passcodeDialog" variant="tonal" class="mx-auto w-75">
+    <v-card :disabled="passcodeDialog > 0" :loading="passcodeDialog > 0" variant="tonal" class="mx-auto w-75">
         <div class="text-h3 mx-4 my-4">{{ payload.title }}</div>
 
         <div class="mx-4 my-4">{{ payload.description }}</div>
@@ -25,7 +25,8 @@
             <template v-for="(option, index) in payload.options">
                 <div class="mx-4 my-4 d-flex align-center w-100 mx-auto justify-start">
                     <div class="mx-2">{{ option }}</div>
-                    <v-text-field class="w-auto mx-2" :rules="voteRules" hide-details="auto" v-model="vote[index]">
+                    <v-text-field class="w-auto mx-2" :disabled="disabledState.voteTextfield" :rules="voteRules"
+                        hide-details="auto" v-model="vote[index]">
                         <template #prepend-inner><v-icon @click="decreaseVote(index)" icon="mdi-minus"></v-icon></template>
                         <template #append-inner><v-icon @click="increaseVote(index)" icon="mdi-plus"></v-icon></template>
                     </v-text-field>
@@ -35,8 +36,9 @@
         <v-divider></v-divider>
 
         <div class="d-flex mx-4 my-4">
-            <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="stateEnum[pollInfoOnChain.state] != 'Created'"
-                @click="joinPoll()">Join the vote</v-btn>
+            <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="disabledState.joinVote" @click="joinPoll()">Join
+                the
+                vote</v-btn>
             <v-btn class="mx-2" :disabled="stateEnum[pollInfoOnChain.state] != 'Ongoing'" @click="castVote()">Vote</v-btn>
             <v-btn class="mx-2" v-if="
                 browserWallet.getAddress() ==
@@ -54,7 +56,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import * as eccryptoJS from 'eccrypto-js'
 import { Buffer } from 'buffer'
@@ -87,12 +89,44 @@ const voteRules = [
 
 const stateEnum = ['Created', 'Ongoing', 'Ended']
 
-const voteTextfieldDisabled = ref(false)
-
-onMounted(async () => {
-    // const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
-
+const disabledState = reactive({
+    voteTextfield: false,
+    joinVote: false
 })
+
+const calculateVoteTextfieldDisabled = async () => {
+    if (stateEnum[pollInfoOnChain.state] != 'Ongoing') return true
+    const result = await inMemberGroup()
+    if (!result) return true
+    return false
+}
+
+const calculateJoinVoteDisabled = async () => {
+    if (stateEnum[pollInfoOnChain.state] != 'Created') return true
+    const result = await inMemberGroup()
+    if (result) return true
+
+    return false
+}
+
+const inMemberGroup = async () => {
+    const globalStore = useGlobalStore()
+    const { selectedChain } = storeToRefs(globalStore)
+
+    const identityStr = localStorage.getItem('identity')
+    if (identityStr == null) return false
+    const { commitment } = new Identity(identityStr)
+
+    const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
+
+    for (let i = 0; i < memberInGroup.length; ++i) {
+        console.log(memberInGroup[i])
+        if (commitment.toString() == memberInGroup[i]) {
+            return true
+        }
+    }
+    return false
+}
 
 const pollInfoOnChain = reactive({
     ownerAddress: '',
@@ -122,7 +156,7 @@ const getOwnerOfVoteFromBlockchain = async () => {
 
 const browserWallet = new BrowserWallet()
 
-const passcodeDialog = ref(true)
+const passcodeDialog = ref(2)
 
 const passcode = ref('t031')
 
@@ -141,6 +175,11 @@ onMounted(async () => {
     await getInfo()
     await getOwnerOfVoteFromBlockchain()
     await getStateFromBlockchain()
+
+    disabledState.joinVote = await calculateJoinVoteDisabled()
+    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
+
+    passcodeDialog.value = passcodeDialog.value - 1
 })
 
 const payload = ref({
@@ -315,7 +354,7 @@ const decryptPollDetail = () => {
         return
     }
 
-    passcodeDialog.value = false
+    passcodeDialog.value = passcodeDialog.value - 1
     setupChart()
 }
 </script>
