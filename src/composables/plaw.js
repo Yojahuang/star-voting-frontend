@@ -251,3 +251,5 @@ const getEvents = async (start_block, end_block, chain_name, event_name) => {
 //     // info = await getEvents(130356778, 130357074, "Chiado Testnet", "GroupCreated");  // [sync]
 //     // console.log(info)
 // })();
+
+export { getEvents };
