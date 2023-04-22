@@ -16,7 +16,7 @@
         <div class="mx-4 my-4">{{ payload.description }}</div>
 
         <div
-            v-show="info.showRealtimeResult"
+            v-show="pollInfo.showRealtimeResult"
             class="mx-auto mx-4 my-4"
             style="width: 600px; height: 400px"
             id="echart"
@@ -66,13 +66,13 @@
             <v-btn
                 class="mx-2"
                 prepend-icon="mdi-account-plus"
-                :disabled="stateEnum[voteInfoOnChain.state] != 'Created'"
+                :disabled="stateEnum[pollInfoOnChain.state] != 'Created'"
                 @click="joinPoll()"
                 >Join the vote</v-btn
             >
             <v-btn
                 class="mx-2"
-                :disabled="stateEnum[voteInfoOnChain.state] != 'Ongoing'"
+                :disabled="stateEnum[pollInfoOnChain.state] != 'Ongoing'"
                 @click="castVote()"
                 >Vote</v-btn
             >
@@ -80,8 +80,8 @@
                 class="mx-2"
                 v-if="
                     browserWallet.getAddress() ==
-                        voteInfoOnChain.ownerAddress &&
-                    stateEnum[voteInfoOnChain.state] == 'Created'
+                        pollInfoOnChain.ownerAddress &&
+                    stateEnum[pollInfoOnChain.state] == 'Created'
                 "
                 @click="startPoll()"
                 prepend-icon="mdi-toggle-switch"
@@ -91,8 +91,8 @@
                 class="mx-2"
                 v-if="
                     browserWallet.getAddress() ==
-                        voteInfoOnChain.ownerAddress &&
-                    stateEnum[voteInfoOnChain.state] == 'Ongoing'
+                        pollInfoOnChain.ownerAddress &&
+                    stateEnum[pollInfoOnChain.state] == 'Ongoing'
                 "
                 @click="endPoll()"
                 prepend-icon="mdi-toggle-switch"
@@ -123,6 +123,7 @@ import { generateProof } from '@/composables/Proof'
 import StarVotingContract from '@/composables/StarVoting'
 import BrowserWallet from '@/composables/wallet'
 import { getGroupMembers } from '@/composables/Group'
+import { encryptMessage, decryptMessage, generateKeyPair } from '@/composables/Crypto'
 
 const voteRules = [
     (value: string) => {
@@ -136,7 +137,7 @@ const voteRules = [
 
 const stateEnum = ['Created', 'Ongoing', 'Ended']
 
-const voteInfoOnChain = reactive({
+const pollInfoOnChain = reactive({
     ownerAddress: '',
     state: 0,
 })
@@ -145,7 +146,7 @@ const getStateFromBlockchain = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
     const result = await StarVoting.getPollState(pollId)
-    voteInfoOnChain.state = result
+    pollInfoOnChain.state = result
 }
 
 const getInfoFromBlockchain = async () => {
@@ -158,10 +159,8 @@ const getInfoFromBlockchain = async () => {
 const getOwnerOfVoteFromBlockchain = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
-
     const result = await StarVoting.getPollCoordinator(pollId)
-
-    voteInfoOnChain.ownerAddress = result
+    pollInfoOnChain.ownerAddress = result
 }
 
 const browserWallet = new BrowserWallet()
@@ -174,11 +173,11 @@ const route = useRoute()
 const routeId = route.params.id
 const pollId = BigInt('0x' + routeId)
 
-let info: any = {}
+let pollInfo: any = {}
 
 const getInfo = async () => {
-    info = await getInfoFromBlockchain()
-    info = JSON.parse(info)
+    pollInfo = await getInfoFromBlockchain()
+    pollInfo = JSON.parse(pollInfo)
 }
 
 onMounted(async () => {
@@ -215,20 +214,24 @@ const castVote = async () => {
         selectedChain.value,
         pollId.toString()
     )
-    console.log(memberInGroup)
 
     group.addMembers(memberInGroup)
 
-    // TODO: Casting vote data and encrypt it
-    const data = '123123'
-    let fullProof: FullProof
-    fullProof = await generateProof(identity, group, pollId, Buffer.from(data))
+    // TODO: Is this live poll?
+    pollInfo.payload.livePoll
 
+    // TODO: Casting vote data and encrypt it
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
-    console.log(pollId)
-    console.log(typeof pollId)
+    
+    const data = '123123'
+
+    // Proof Generation
+    let fullProof: FullProof
+    fullProof = await generateProof(identity, group, pollId, Buffer.from(data))
+
+    
 
     await StarVoting.castVote(
         data,
@@ -244,7 +247,7 @@ const castVote = async () => {
 const endPoll = async () => {}
 
 const startPoll = async () => {
-    const keyPair = eccryptoJS.generateKeyPair()
+    const keyPair = await generateKeyPair()
 
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
     const privateKeyBase64 = keyPair.privateKey.toString('base64')
@@ -272,7 +275,7 @@ const joinPoll = async () => {
 
 const parseRealtimeResult = (): number[] => {
     const result: number[] = []
-    if (info.showRealtimeResult == true) {
+    if (pollInfo.showRealtimeResult == true) {
         for (let i = 0; i < payload.value.options.length; i++) result.push(10)
     } else {
         for (let i = 0; i < payload.value.options.length; i++) result.push(0)
@@ -321,13 +324,13 @@ const increaseVote = (index: number) => {
 }
 
 const calculateRemainVote = () => {
-    if (typeof info.payload == 'string') return 0
+    if (typeof pollInfo.payload == 'string') return 0
 
     let ans = payload.value.voteCount
 
     for (let i = 0; i < payload.value.options.length; ++i) {
         let cost = vote.value[i]
-        if (info.useQuadratic) cost = cost * cost
+        if (pollInfo.useQuadratic) cost = cost * cost
         ans = ans - cost
     }
     return ans
@@ -342,13 +345,13 @@ const remainVoteFontColor = () => {
 }
 
 const decryptPollDetail = () => {
-    console.log(info)
-    const bytePayload = AES.decrypt(info.payload, passcode.value)
+    console.log(pollInfo)
+    const bytePayload = AES.decrypt(pollInfo.payload, passcode.value)
     try {
-        info.payload = JSON.parse(bytePayload.toString(encUtf8))
+        pollInfo.payload = JSON.parse(bytePayload.toString(encUtf8))
 
-        payload.value = info.payload
-        for (let i = 0; i < info.payload.options.length; ++i) vote.value.push(0)
+        payload.value = pollInfo.payload
+        for (let i = 0; i < pollInfo.payload.options.length; ++i) vote.value.push(0)
     } catch (error) {
         alert('Passcode is wrong!')
         console.log(error)

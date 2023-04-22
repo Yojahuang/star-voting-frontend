@@ -20,6 +20,32 @@ export default class StarVotingContract {
             )
     }
 
+    getEncryptionKey = async (pollId: BigInt) => {
+        if (this.starVotingContract == undefined) return
+
+        let encryptionKey
+        try {
+            encryptionKey = await this.starVotingContract.getEncryptionKey(pollId)
+        } catch (error) {
+            console.log(error)
+        }
+
+        return encryptionKey
+    }
+
+    getDecryptionKey = async (pollId: BigInt) => {
+        if (this.starVotingContract == undefined) return
+
+        let decryptionKey
+        try {
+            decryptionKey = await this.starVotingContract.getDecryptionKey(pollId)
+        } catch (error) {
+            console.log(error)
+        }
+
+        return decryptionKey
+    }
+
     getEncryptedPollInfo = async (pollId: BigInt) => {
         if (this.starVotingContract == undefined) return
 
