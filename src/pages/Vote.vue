@@ -75,7 +75,7 @@ import StarVotingContract from '@/composables/StarVoting'
 import BrowserWallet from '@/composables/wallet'
 import { getGroupMembers } from '@/composables/Group'
 import { getEvents } from '@/composables/EtherLog'
-import { encryptMessage, decryptMessage, generateKeyPair } from '@/composables/Crypto'
+import * as eccryptoJS from 'eccrypto-js'
 
 const voteRules = [
     (value: string) => {
@@ -120,7 +120,6 @@ const inMemberGroup = async () => {
     const memberInGroup = await getGroupMembers(selectedChain.value, pollId.toString())
 
     for (let i = 0; i < memberInGroup.length; ++i) {
-        console.log(memberInGroup[i])
         if (commitment.toString() == memberInGroup[i]) {
             return true
         }
@@ -235,7 +234,7 @@ const castVote = async () => {
     if (pollInfo.showRealtimeResult != true) {
         // Query encryptionKey and encrypt vote data
         const encryptionKey = await StarVoting.getEncryptionKey(pollId)
-        const encryptedData = await encryptMessage(Buffer.from(dataByteArray), Buffer.from(encryptionKey, 'base64'))
+        const encryptedData = await eccryptoJS.encrypt(Buffer.from(encryptionKey, 'base64'), Buffer.from(dataByteArray))
 
         serializedData = Buffer.from(BSON.serialize(encryptedData))
     } else {    // If this is a realtime poll, don't encrypt the vote data
@@ -264,7 +263,7 @@ const castVote = async () => {
 const startPoll = async () => {
     disableCount.value = disableCount.value + 1
 
-    const keyPair = await generateKeyPair()
+    const keyPair = await eccryptoJS.generateKeyPair()
 
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
     const privateKeyBase64 = keyPair.privateKey.toString('base64')
@@ -323,25 +322,40 @@ const parseRealtimeResult = async (): Promise<number[]> => {
         return acc
     }, [])
 
-    console.log(filteredVoteAddedEvents)
-
     const result: number[] = [];
     for (let i = 0; i < payload.value.options.length; i++) result.push(0)
 
     if (pollInfo.showRealtimeResult == true) {
         for (const voteData of filteredVoteAddedEvents) {
             const voteDataArray = Uint8Array.from(Buffer.from(voteData.vote, 'base64'))
-            console.log(voteDataArray)
             for (let i = 0; i < voteDataArray.length; i += 2) {
                 result[voteDataArray[i]] += voteDataArray[i + 1]
             }
         }
-    } else {
-        for (let i = 0; i < payload.value.options.length; i++) result.push(0)
-    }
+        return result
+    } 
 
-    // the code of parsing realtime result from blockchain
-    console.log(result)
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+
+    const decryptionKey = await StarVoting.getDecryptionKey(pollId)
+    if (decryptionKey.length < 1) return result
+
+    for (const voteData of filteredVoteAddedEvents) {
+        const doc = BSON.deserialize(Buffer.from(voteData.vote, 'base64'))
+        const encryptedObject = {
+            iv: Buffer.from(doc.iv.buffer),
+            ephemPublicKey: Buffer.from(doc.ephemPublicKey.buffer),
+            ciphertext: Buffer.from(doc.ciphertext.buffer),
+            mac: Buffer.from(doc.mac.buffer)
+        }
+
+        const decryptedData = await eccryptoJS.decrypt(Buffer.from(decryptionKey, 'base64'), encryptedObject)
+        const decryptedVoteData = Uint8Array.from(decryptedData)
+        for (let i = 0; i < decryptedVoteData.length; i += 2) {
+            result[decryptedVoteData[i]] += decryptedVoteData[i + 1]
+        }
+    }
     return result
 }
 
@@ -404,7 +418,6 @@ const remainVoteFontColor = () => {
 }
 
 const decryptPollDetail = async () => {
-    console.log(pollInfo)
     const bytePayload = AES.decrypt(pollInfo.payload, passcode)
     try {
         pollInfo.payload = JSON.parse(bytePayload.toString(encUtf8))
