@@ -63,4 +63,14 @@ export default class StarVotingContract {
 
         await this.starVotingContract.connect(signer).addVoter(pollId, commitment)
     }
+
+    startPoll = async (pollId: ethers.BigNumber, encryptionKey: string) => {
+        const ethereum = (window as any).ethereum
+        const provider = new ethers.providers.Web3Provider(ethereum, 'any')
+        const signer = provider.getSigner()
+
+        if (this.starVotingContract == undefined) return
+
+        await this.starVotingContract.connect(signer).startPoll(pollId, encryptionKey)
+    }
 }

@@ -32,15 +32,17 @@
         <v-divider></v-divider>
 
         <div class="d-flex my-4">
-            <v-btn class="mx-2" prepend-icon="mdi-account-plus" @click="joinVote()">Join the vote</v-btn>
-            <v-btn class="mx-2" @click="sendVote()">Vote</v-btn>
+            <v-btn class="mx-2" prepend-icon="mdi-account-plus" :disabled="stateEnum[voteInfoOnChain.state] != 'Created'"
+                @click="joinVote()">Join
+                the vote</v-btn>
+            <v-btn class="mx-2" :disabled="stateEnum[voteInfoOnChain.state] != 'Ongoing'" @click="sendVote()">Vote</v-btn>
             <v-btn class="mx-2"
                 v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Created'"
-                prepend-icon="mdi-toggle-switch">Start
+                @click="startVote()" prepend-icon="mdi-toggle-switch">Start
                 Vote</v-btn>
             <v-btn class="mx-2"
                 v-if="browserWallet.getAddress() == voteInfoOnChain.ownerAddress && stateEnum[voteInfoOnChain.state] == 'Ongoing'"
-                prepend-icon="mdi-toggle-switch">End
+                @click="endVote()" prepend-icon="mdi-toggle-switch">End
                 Vote</v-btn>
         </div>
     </div>
@@ -57,6 +59,9 @@ import { Identity } from "@semaphore-protocol/identity"
 
 import StarVotingContract from "@/composables/StarVoting"
 import BrowserWallet from "@/composables/wallet"
+
+import * as eccryptoJS from 'eccrypto-js';
+import { Buffer } from 'buffer';
 
 import { onMounted } from 'vue';
 
@@ -130,6 +135,40 @@ const hasDecrypted = () => {
         return false
     }
     return true
+}
+
+const endVote = async () => {
+
+}
+
+const startVote = async () => {
+    const keyPair = eccryptoJS.generateKeyPair();
+
+    const publicKeyBase64 = keyPair.publicKey.toString('base64')
+    const privateKeyBase64 = keyPair.privateKey.toString('base64')
+
+    localStorage.setItem("publicKey", publicKeyBase64);
+    localStorage.setItem("privateKey", privateKeyBase64);
+
+    const StarVoting = new StarVotingContract()
+    StarVoting.init()
+
+    await StarVoting.startPoll(pollId, publicKeyBase64)
+
+    // console.log(publicKeyBase64)
+    // console.log(privateKeyBase64)
+
+    // const recoveredKeyPair = {
+    //     publicKey: Buffer.from(publicKeyBase64, "base64"),
+    //     privateKey: Buffer.from(privateKeyBase64, "base64")
+    // }
+
+    // const str = 'test message to encrypt';
+    // const msg = eccryptoJS.utf8ToBuffer(str);
+
+    // const encrypted = await eccryptoJS.encrypt(keyPair.publicKey, msg);
+
+    // const decrypted = await eccryptoJS.decrypt(keyPair.privateKey, encrypted);
 }
 
 const joinVote = async () => {
