@@ -42,6 +42,8 @@ export const useGlobalStore = defineStore('global', () => {
         const wallet = new BrowserWallet()
         const chainInfo = chainInfoMap[selectedChain.value]
         await wallet.switchChain(chainInfo.chainId, chainInfo.rpcUrl, selectedChain.value, chainInfo.nativeCurrency)
+
+        localStorage.setItem("selectedChain", selectedChain.value)
     })
 
     return { selectedChain, chainInfoMap, shouldBeDisabled }
