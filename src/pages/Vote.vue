@@ -30,7 +30,7 @@
         </v-progress-linear>
 
         <div v-show="pollInfo.showRealtimeResult || pollInfoOnChain.state == 2" class="mx-auto mx-4 my-4"
-            style="width: 600px; height: 400px" id="echart">
+            style="width: 800px; height: 500px" id="echart">
         </div>
 
         <div class="font-weight-thin mx-4 my-4">
@@ -534,6 +534,29 @@ const setupChart = async () => {
         xAxis: {
             type: 'category',
             data: payload.value.options,
+            axisLabel: {
+                show: true,
+                rotate: 45,
+                fontSize: 12,
+                width: 100,
+                overflow: 'truncate',
+                ellipsis: '...'
+            }
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                // Use axis to trigger tooltip
+                type: 'shadow' // 'shadow' as default; can also be 'line' or 'shadow'
+            }
+        },
+        legend: {
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
         },
         yAxis: {
             type: 'value',
