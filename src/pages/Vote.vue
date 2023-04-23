@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="memberDialog">
-        <v-card class="w-50 mx-auto">
+        <v-card class="w-50 mx-auto" max-height="500">
             <div class="text-center mt-4 font-weight-bold">Joined User Commitments</div>
 
             <div v-for="member in pollInfoOnChain.currentMemberInGroup" class="my-4 text-center mx-auto w-100">
