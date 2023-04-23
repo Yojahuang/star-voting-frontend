@@ -1,12 +1,11 @@
 import { ethers } from 'ethers'
 import ABI from '@/assets/StarVoting.json'
+import BrowserWallet from './wallet'
 
 export type chainName =
     | 'Linea Testnet'
     | 'ThunderCore Testnet'
     | 'Chiado(Gnosis) testnet'
-
-const address = '0xAC3d9886750b7Ac602E0900aAb13F597910F4700'
 
 const blockMap = {
     'ThunderCore Testnet': {
@@ -223,6 +222,9 @@ function getContract(chainName: chainName) {
             'https://rpc.chiadochain.net'
         )
     }
+
+    const browserWallet = new BrowserWallet()
+    const address = browserWallet.address.value
 
     contract = new ethers.Contract(address, ABI, provider)
     return { contract, startBlock: blockMap[chainName].startBlock, provider }

@@ -1,6 +1,8 @@
 import { BigNumberish, ethers } from 'ethers'
 import contractABI from '@/assets/StarVoting.json'
 import BrowserWallet from '@/composables/wallet'
+import { storeToRefs } from 'pinia'
+import { useGlobalStore } from '@/stores/Global'
 
 export default class StarVotingContract {
     static merkleTreeDepth = 20
@@ -11,6 +13,14 @@ export default class StarVotingContract {
     init = () => {
         const ethereum = (window as any).ethereum
         const provider = new ethers.providers.Web3Provider(ethereum, 'any')
+
+        const { selectedChain } = storeToRefs(useGlobalStore())
+
+        if (selectedChain.value == 'Linea Testnet') {
+            this.address = '0xF5cf95cbA9E7E7c7831b07A0D3998Ac31A109857'
+        } else {
+            this.address = '0xAC3d9886750b7Ac602E0900aAb13F597910F4700'
+        }
 
         if (provider != null)
             this.starVotingContract = new ethers.Contract(
@@ -65,12 +75,8 @@ export default class StarVotingContract {
     }
 
     waitTx = async (tx: any) => {
-        try {
-            const receipt = await tx.wait()
-            console.log(receipt)
-        } catch (error) {
-            console.log("Error catched", error)
-        }
+        const receipt = await tx.wait()
+        console.log(receipt)
     }
 
     createPoll = async (
