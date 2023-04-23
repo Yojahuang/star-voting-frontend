@@ -1,8 +1,28 @@
 <template>
+    <v-dialog v-model="memberDialog">
+        <v-card class="w-50 mx-auto">
+            <div class="text-center mt-4 font-weight-bold">Joined User Commitments</div>
+            <v-list>
+                <v-list-item v-for="member in pollInfoOnChain.currentMemberInGroup">
+                    <template v-if="member == myCommitment.toString()" #prepend>
+                        <v-icon icon="mdi-account"></v-icon>
+                    </template>
+                    0x{{ BigInt(member).toString(16) }}
+                </v-list-item>
+            </v-list>
+        </v-card>
+    </v-dialog>
+
     <v-card :disabled="disableCount > 0" :loading="disableCount > 0" variant="tonal" class="mx-auto w-75">
         <div class="text-h3 mx-4 my-4">{{ payload.title }}</div>
 
         <div class="mx-4 my-4">{{ payload.description }}</div>
+
+        <v-chip @click="memberDialog = true" class="mx-4 my-4">
+            <div class="font-weight-bold d-inline">{{ pollInfoOnChain.currentMemberInGroup.length }}&nbsp;</div> people has
+            joined
+            the vote
+        </v-chip>
 
         <v-progress-linear v-model="getStatePercentage" color="blue-grey" height="25">
             <strong>{{ stateEnum[pollInfoOnChain.state] }}</strong>
@@ -104,6 +124,8 @@ const snackbarData = reactive({
     show: false,
 })
 
+const myCommitment = ref(BigInt(0))
+
 const showSnackbar = (msg: string) => {
     snackbarData.msg = msg
     snackbarData.show = true
@@ -152,6 +174,8 @@ const inMemberGroup = async () => {
     if (identityStr == null) return false
     const { commitment } = new Identity(identityStr)
 
+    myCommitment.value = commitment
+
     const memberInGroup = await getGroupMembers(
         selectedChain.value,
         pollId.toString()
@@ -168,6 +192,7 @@ const inMemberGroup = async () => {
 const pollInfoOnChain = reactive({
     ownerAddress: '',
     state: 0,
+    currentMemberInGroup: [] as string[]
 })
 
 const getStatePercentage = computed(() => {
@@ -175,25 +200,24 @@ const getStatePercentage = computed(() => {
     return answer[pollInfoOnChain.state]
 })
 
-const getStateFromBlockchain = async () => {
-    const StarVoting = new StarVotingContract()
-    StarVoting.init()
-    const result = await StarVoting.getPollState(pollId)
-    pollInfoOnChain.state = result
-}
-
 const getInfoFromBlockchain = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
     const result = await StarVoting.getEncryptedPollInfo(pollId)
-    return result
-}
 
-const getOwnerOfVoteFromBlockchain = async () => {
-    const StarVoting = new StarVotingContract()
-    StarVoting.init()
-    const result = await StarVoting.getPollCoordinator(pollId)
-    pollInfoOnChain.ownerAddress = result
+    const state = await StarVoting.getPollState(pollId)
+    pollInfoOnChain.state = state
+
+    const owner = await StarVoting.getPollCoordinator(pollId)
+    pollInfoOnChain.ownerAddress = owner
+
+    const member = await getGroupMembers(
+        selectedChain.value,
+        pollId.toString()
+    )
+    pollInfoOnChain.currentMemberInGroup = member
+
+    return result
 }
 
 const browserWallet = new BrowserWallet()
@@ -204,11 +228,14 @@ const route = useRoute()
 const routeId = route.params.id
 const pollId = BigInt('0x' + routeId)
 const passcode: string = route.params.passcode as any
+const usedChain: string = window.atob(route.params.usedChain as any)
 
 let pollInfo: any = {}
 
 const globalStore = useGlobalStore()
 const { selectedChain } = storeToRefs(globalStore)
+
+const memberDialog = ref(false)
 
 const getInfo = async () => {
     pollInfo = await getInfoFromBlockchain()
@@ -216,6 +243,7 @@ const getInfo = async () => {
 }
 
 onMounted(async () => {
+    selectedChain.value = usedChain as any
     await refresh()
 })
 
@@ -223,8 +251,6 @@ const refresh = async () => {
     disableCount.value = disableCount.value + 1
 
     await getInfo()
-    await getOwnerOfVoteFromBlockchain()
-    await getStateFromBlockchain()
 
     disabledState.joinVote = await calculateJoinVoteDisabled()
     disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
@@ -545,7 +571,7 @@ const calculateRemainVote = () => {
 
     for (let i = 0; i < payload.value.options.length; ++i) {
         let cost = selectedVote.value[i]
-        if (pollInfo.useQuadratic) cost = cost * cost
+        if (pollInfo.payload.useQuadratic) cost = cost * cost
         ans = ans - cost
     }
     return ans

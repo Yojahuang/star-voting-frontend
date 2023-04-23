@@ -37,8 +37,9 @@
 
                 <v-text-field hide-details="auto" v-model="data.voteCount"
                     label="How many votes each people should have"></v-text-field>
-                <v-text-field hide-details="auto" v-model="data.passcode"
-                    label="Passcode, please make sure you don't lose it"></v-text-field>
+                <v-text-field @click="generatePasscode()" hide-details="auto" v-model="data.passcode"
+                    label="Passcode, change me if you want (not recommended)">
+                </v-text-field>
 
                 <v-btn class="w-100 my-4" @click="createVote" color="primary">Create</v-btn>
             </div>
@@ -97,13 +98,21 @@
 import { useGlobalStore } from '@/stores/Global'
 import { storeToRefs } from 'pinia'
 
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
 import AES from 'crypto-js/aes'
 import { v4 as uuidv4 } from 'uuid'
 import { ethers } from 'ethers'
 import StarVotingContract from '@/composables/StarVoting'
 
-const { shouldBeDisabled } = storeToRefs(useGlobalStore())
+const { selectedChain, shouldBeDisabled } = storeToRefs(useGlobalStore())
+
+const generatePasscode = () => {
+    data.passcode = uuidv4().slice(0, 10)
+}
+
+onMounted(() => {
+    generatePasscode()
+})
 
 const data = reactive({
     title: '',
@@ -195,7 +204,9 @@ const createVote = async () => {
 
     shouldBeDisabled.value = false
     data.shareVotelinkDialog = true
+
+
     data.voteLink =
-        window.location.origin + `/vote/${data.pollUuid}/${data.passcode}`
+        window.location.origin + `/vote/${data.pollUuid}/${data.passcode}/${window.btoa(selectedChain.value)}`
 }
 </script>
