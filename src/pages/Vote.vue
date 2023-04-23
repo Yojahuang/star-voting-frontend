@@ -2,14 +2,11 @@
     <v-dialog v-model="memberDialog">
         <v-card class="w-50 mx-auto">
             <div class="text-center mt-4 font-weight-bold">Joined User Commitments</div>
-            <v-list>
-                <v-list-item v-for="member in pollInfoOnChain.currentMemberInGroup">
-                    <template v-if="member == myCommitment.toString()" #prepend>
-                        <v-icon icon="mdi-account"></v-icon>
-                    </template>
-                    0x{{ BigInt(member).toString(16) }}
-                </v-list-item>
-            </v-list>
+
+            <div v-for="member in pollInfoOnChain.currentMemberInGroup" class="my-4 text-center mx-auto w-100">
+                <v-icon v-if="member == myCommitment.toString()" icon="mdi-account"></v-icon>
+                0x{{ BigInt(member).toString(16) }}
+            </div>
         </v-card>
     </v-dialog>
 
@@ -22,6 +19,10 @@
             <div class="font-weight-bold d-inline">{{ pollInfoOnChain.currentMemberInGroup.length }}&nbsp;</div> people has
             joined
             the vote
+        </v-chip>
+
+        <v-chip>
+            {{ usedChain }}
         </v-chip>
 
         <v-progress-linear v-model="getStatePercentage" color="blue-grey" height="25">
