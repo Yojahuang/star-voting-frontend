@@ -63,6 +63,15 @@
             </div>
         </v-card>
     </v-dialog>
+
+    <v-snackbar color="error" v-model="snackbarData.show">
+        {{ snackbarData.msg }}
+        <template v-slot:actions>
+            <v-btn class="text-white" variant="text" @click="snackbarData.show = false">
+                Close
+            </v-btn>
+        </template>
+    </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -89,6 +98,16 @@ import BrowserWallet from '@/composables/wallet'
 import { getGroupMembers } from '@/composables/Group'
 import { getEvents } from '@/composables/EtherLog'
 import * as eccryptoJS from 'eccrypto-js'
+
+const snackbarData = reactive({
+    msg: '',
+    show: false,
+})
+
+const showSnackbar = (msg: string) => {
+    snackbarData.msg = msg
+    snackbarData.show = true
+}
 
 const voteRules = [
     (value: string) => {
@@ -281,19 +300,26 @@ const castVote = async () => {
         Buffer.from(voteData)
     )
 
-    await StarVoting.castVote(
-        voteData,
-        fullProof.nullifierHash,
-        pollId,
-        fullProof.proof
-    )
+    try {
+
+        await StarVoting.castVote(
+            voteData,
+            fullProof.nullifierHash,
+            pollId,
+            fullProof.proof
+        )
+    } catch (error) {
+        await refresh()
+        disableCount.value = disableCount.value - 1
+        console.log("Error catched", error)
+        showSnackbar("Error: Unexpected behavior happened!, try refresh and reconnect your wallet!")
+        return
+    }
 
     await parseRealtimeResult()
 
     // Remove the identity from local storage
     // localStorage.removeItem(`${pollId.toString()}_identity`)
-    disabledState.voteTextfield = true
-
     await refresh()
 
     disableCount.value = disableCount.value - 1
@@ -318,15 +344,20 @@ const startPoll = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
-    await StarVoting.startPoll(pollId, publicKeyBase64)
+    try {
+        await StarVoting.startPoll(pollId, publicKeyBase64)
+    } catch (error) {
+        await refresh()
+        disableCount.value = disableCount.value - 1
+        console.log("Error catched", error)
+        showSnackbar("Error: Unexpected behavior happened!, try refresh and reconnect your wallet!")
+        return
+    }
 
     pollInfoOnChain.state = pollInfoOnChain.state + 1
     disableCount.value = disableCount.value - 1
 
     await refresh()
-
-    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
-    disabledState.joinVote = true
 }
 
 const endPoll = async () => {
@@ -340,9 +371,17 @@ const endPoll = async () => {
     console.log(privateKeyBase64)
 
     pollInfoOnChain.state = pollInfoOnChain.state + 1
-    await StarVoting.endPoll(pollId, privateKeyBase64)
 
-    disabledState.voteTextfield = await calculateVoteTextfieldDisabled()
+    try {
+        await StarVoting.endPoll(pollId, privateKeyBase64)
+    } catch (error) {
+        await refresh()
+        disableCount.value = disableCount.value - 1
+        console.log("Error catched", error)
+        showSnackbar("Error: Unexpected behavior happened!, try refresh and reconnect your wallet!")
+        return
+    }
+
 
     await refresh()
 
@@ -360,8 +399,15 @@ const joinPoll = async () => {
     const StarVoting = new StarVotingContract()
     StarVoting.init()
 
-    await StarVoting.addVoter(pollId, commitment)
-    disabledState.joinVote = true
+    try {
+        await StarVoting.addVoter(pollId, commitment)
+    } catch (error) {
+        await refresh()
+        disableCount.value = disableCount.value - 1
+        console.log("Error catched", error)
+        showSnackbar("Error: Unexpected behavior happened!, try refresh and reconnect your wallet!")
+        return
+    }
 
     await refresh()
 
@@ -394,8 +440,31 @@ const parseRealtimeResult = async (): Promise<number[]> => {
             const voteDataArray = Uint8Array.from(
                 Buffer.from(voteData.vote, 'base64')
             )
+
+            const userVoteData = []
+            for (let i = 0; i < payload.value.options.length; i += 1) userVoteData.push(0)
+            let remainVote = payload.value.voteCount
+
+
             for (let i = 0; i < voteDataArray.length; i += 2) {
-                result[voteDataArray[i]] += voteDataArray[i + 1]
+                userVoteData[voteDataArray[i]] += voteDataArray[i + 1]
+            }
+
+            if (payload.value.useQuadratic) {
+                for (let i = 0; i < payload.value.options.length; i += 1) {
+                    remainVote -= userVoteData[i] * userVoteData[i]
+                }
+            } else {
+                for (let i = 0; i < payload.value.options.length; i += 1) {
+                    remainVote -= userVoteData[i]
+                }
+            }
+
+            // put voteData info back to result
+            if (remainVote >= 0) {
+                for (let i = 0; i < payload.value.options.length; i += 1) {
+                    result[i] += userVoteData[i]
+                }
             }
         }
         return result
