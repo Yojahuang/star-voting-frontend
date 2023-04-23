@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import ABI from '@/assets/StarVoting.json'
-import BrowserWallet from './wallet'
+import StarVotingContract from '@/composables/StarVoting'
 
 export type chainName =
     | 'Linea Testnet'
@@ -223,8 +223,9 @@ function getContract(chainName: chainName) {
         )
     }
 
-    const browserWallet = new BrowserWallet()
-    const address = browserWallet.address.value
+    const starVotingContract = new StarVotingContract()
+    starVotingContract.init()
+    const address = starVotingContract.address
 
     contract = new ethers.Contract(address, ABI, provider)
     return { contract, startBlock: blockMap[chainName].startBlock, provider }
@@ -277,8 +278,7 @@ const getEvents = async (chainName: chainName, eventName: event) => {
         info = await getPollStartedEvent(contract, startBlock, endBlock)
         return info
     } else if (eventName === 'VoteAdded') {
-        let info
-        info = await getVoteAddedEvent(contract, startBlock, endBlock)
+        let info = await getVoteAddedEvent(contract, startBlock, endBlock)
         return info
     } else if (eventName === 'PollEnded') {
         let info
