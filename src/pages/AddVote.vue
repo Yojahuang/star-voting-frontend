@@ -107,7 +107,8 @@ import StarVotingContract from '@/composables/StarVoting'
 const { selectedChain, shouldBeDisabled } = storeToRefs(useGlobalStore())
 
 const generatePasscode = () => {
-    data.passcode = uuidv4().slice(0, 10)
+    let utf8Encode = new TextEncoder()
+    data.passcode = ethers.utils.keccak256(utf8Encode.encode(uuidv4())).slice(2, 18)
 }
 
 onMounted(() => {
