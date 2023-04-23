@@ -55,55 +55,22 @@ const flipcard = (idx: number) => {
 
         <div class="mx-auto w-100">
             <v-row dense>
-                <v-col
-                    v-for="(card, idx) in cards"
-                    :cols="card.flex"
-                    class="mx-auto"
-                >
+                <v-col v-for="(card, idx) in cards" :cols="card.flex" class="mx-auto">
                     <v-expand-transition>
-                        <v-card
-                            @click="flipcard(idx)"
-                            v-show="card.show"
-                            class="mx-auto my-4"
-                            elevation="21"
-                            width="400"
-                            height="300"
-                            variant="tonal"
-                        >
+                        <v-card @click="flipcard(idx)" v-show="card.show" class="mx-auto my-4" elevation="21" width="400"
+                            height="300" variant="tonal">
                             <template v-if="card.showText">
-                                <div
-                                    class="mx-auto w-75 h-100 d-flex align-center font-center"
-                                >
+                                <div class="mx-auto w-75 h-100 d-flex align-center font-center">
                                     {{ card.text }}
                                 </div>
                             </template>
                             <template v-else>
-                                <div
-                                    class="mx-auto w-100 h-100 d-flex align-center font-center"
-                                >
+                                <div class="mx-auto w-100 h-100 d-flex align-center font-center">
                                     <div class="w-100 mx-auto">
-                                        <v-icon
-                                            class="mx-auto w-100"
-                                            size="40"
-                                            :icon="card.icon"
-                                        ></v-icon>
-                                        <v-card-title
-                                            align="center"
-                                            class="text-center"
-                                            >{{ card.title }}</v-card-title
-                                        >
-                                        <v-card-subtitle
-                                            justify="center"
-                                            class="text-center"
-                                        >
+                                        <v-icon class="mx-auto w-100" size="40" :icon="card.icon"></v-icon>
+                                        <v-card-title align="center" class="text-center">{{ card.title }}</v-card-title>
+                                        <v-card-subtitle justify="center" class="text-center">
                                             {{ card.subtitle }}
-                                            <template
-                                                v-if="
-                                                    card.title === 'Anonymity'
-                                                "
-                                            >
-                                                <br />&amp; Merkle Tree
-                                            </template>
                                         </v-card-subtitle>
                                     </div>
                                 </div>
