@@ -360,13 +360,8 @@ const startPoll = async () => {
     const publicKeyBase64 = keyPair.publicKey.toString('base64')
     const privateKeyBase64 = keyPair.privateKey.toString('base64')
 
-    console.log(publicKeyBase64, privateKeyBase64)
-
     localStorage.setItem(`${pollId.toString()}_publicKey`, publicKeyBase64)
     localStorage.setItem(`${pollId.toString()}_privateKey`, privateKeyBase64)
-
-    console.log(localStorage.getItem(`${pollId.toString()}_publicKey`), localStorage.getItem(`${pollId.toString()}_privateKey`))
-
 
     const StarVoting = new StarVotingContract()
     StarVoting.init()
