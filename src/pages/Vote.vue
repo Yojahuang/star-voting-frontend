@@ -245,6 +245,7 @@ const getInfo = async () => {
 
 onMounted(async () => {
     selectedChain.value = usedChain as any
+    await browserWallet.connect()
     await refresh()
 })
 
@@ -403,7 +404,6 @@ const endPoll = async () => {
         showSnackbar("Error: Unexpected behavior happened!, try refresh and reconnect your wallet!")
         return
     }
-
 
     await refresh()
 

@@ -10,7 +10,8 @@ export default class BrowserWallet {
         chainId: number,
         rpcUrl: string,
         chainName: string,
-        nativeCurrency: any
+        nativeCurrency: any,
+        blockExplorerUrls: string[]
     ) => {
         const ethereum = (window as any).ethereum
 
@@ -29,6 +30,7 @@ export default class BrowserWallet {
                             rpcUrls: [rpcUrl],
                             chainName,
                             nativeCurrency,
+                            blockExplorerUrls
                         },
                     ],
                 })
@@ -58,7 +60,8 @@ export default class BrowserWallet {
             chainInfo.chainId,
             chainInfo.rpcUrl,
             selectedChain.value,
-            chainInfo.nativeCurrency
+            chainInfo.nativeCurrency,
+            chainInfo.blockExplorerUrls
         )
 
         const providerURL = provider.connection.url

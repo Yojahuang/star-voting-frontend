@@ -7,11 +7,21 @@ export const useGlobalStore = defineStore('global', () => {
         | 'ThunderCore Testnet'
         | 'Linea Testnet'
         | 'Chiado(Gnosis) testnet'
+    interface ChainInfo {
+        chainId: number,
+        rpcUrl: string,
+        nativeCurrency: any,
+        blockExplorerUrls: string[]
+    }
+
+    interface ChainInfoMap {
+        [key: string]: ChainInfo
+    }
     const selectedChain = ref<chain>('ThunderCore Testnet')
 
     const shouldBeDisabled = ref(false)
 
-    const chainInfoMap = {
+    const chainInfoMap: ChainInfoMap = {
         'ThunderCore Testnet': {
             chainId: 18,
             rpcUrl: 'https://testnet-rpc.thundercore.com',
@@ -20,6 +30,7 @@ export const useGlobalStore = defineStore('global', () => {
                 symbol: 'TST',
                 decimals: 18,
             },
+            blockExplorerUrls: ["https://explorer-testnet.thundercore.com/"]
         },
         'Linea Testnet': {
             chainId: 59140,
@@ -29,6 +40,7 @@ export const useGlobalStore = defineStore('global', () => {
                 symbol: 'ETH',
                 decimals: 18,
             },
+            blockExplorerUrls: ["https://explorer.goerli.linea.build/"]
         },
         'Chiado(Gnosis) testnet': {
             chainId: 10200,
@@ -38,6 +50,7 @@ export const useGlobalStore = defineStore('global', () => {
                 symbol: 'xDAI',
                 decimals: 18,
             },
+            blockExplorerUrls: ["https://blockscout.com/gnosis/chiado"]
         },
     }
 
@@ -48,7 +61,8 @@ export const useGlobalStore = defineStore('global', () => {
             chainInfo.chainId,
             chainInfo.rpcUrl,
             selectedChain.value,
-            chainInfo.nativeCurrency
+            chainInfo.nativeCurrency,
+            chainInfo.blockExplorerUrls
         )
 
         localStorage.setItem('selectedChain', selectedChain.value)
