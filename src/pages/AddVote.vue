@@ -30,8 +30,8 @@
                 <v-checkbox hide-details="auto" v-model="data.useQuadratic" label="Use quadratic voting"></v-checkbox>
                 <v-checkbox hide-details="auto" v-model="data.showRealtimeResult" label="Show realtime result"></v-checkbox>
                 <v-checkbox class="mb-2" :messages="data.publicVote
-                        ? ''
-                        : 'If you make the vote private, you\'ll have to collect commitments by yourself'
+                    ? ''
+                    : 'If you make the vote private, you\'ll have to collect commitments by yourself'
                     " v-model="data.publicVote" label="Make the vote public">
                 </v-checkbox>
 
@@ -104,6 +104,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { ethers } from 'ethers'
 import StarVotingContract from '@/composables/StarVoting'
 
+import BrowserWallet from '@/composables/wallet'
+
 const { selectedChain, shouldBeDisabled } = storeToRefs(useGlobalStore())
 
 const generatePasscode = () => {
@@ -111,7 +113,9 @@ const generatePasscode = () => {
     data.passcode = ethers.utils.keccak256(utf8Encode.encode(uuidv4())).slice(2, 18)
 }
 
-onMounted(() => {
+onMounted(async () => {
+    const wallet = new BrowserWallet()
+    await wallet.connect()
     generatePasscode()
 })
 
@@ -205,7 +209,6 @@ const createVote = async () => {
 
     shouldBeDisabled.value = false
     data.shareVotelinkDialog = true
-
 
     data.voteLink =
         window.location.origin + `/vote/${data.pollUuid}/${data.passcode}/${window.btoa(selectedChain.value)}`

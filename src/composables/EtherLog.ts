@@ -7,6 +7,23 @@ export type chainName =
     | 'ThunderCore Testnet'
     | 'Chiado(Gnosis) testnet'
 
+const maximumBlockRange = 172800
+
+// interface ResultMap {
+//     [key: string]: any[]
+// }
+
+// const parseResult: ResultMap = {
+//     'GroupCreated': [],
+//     'MemberAdded': [],
+//     'MemberUpdated': [],
+//     'MemberRemoved': [],
+//     'PollCreated': [],
+//     'PollStarted': [],
+//     'VoteAdded': [],
+//     'PollEnded': []
+// }
+
 const blockMap = {
     'ThunderCore Testnet': {
         startBlock: 104926408,
@@ -247,11 +264,7 @@ type event =
     | 'VoteAdded'
     | 'PollEnded'
 
-const getEvents = async (chainName: chainName, eventName: event) => {
-    const { contract, startBlock, provider } = getContract(chainName)
-
-    const endBlock = await getBlockNumber(provider)
-
+const getInfo = async (eventName: event, contract: ethers.Contract, startBlock: number, endBlock: any) => {
     // for group
     if (eventName === 'GroupCreated') {
         let info
@@ -280,11 +293,35 @@ const getEvents = async (chainName: chainName, eventName: event) => {
     } else if (eventName === 'VoteAdded') {
         let info = await getVoteAddedEvent(contract, startBlock, endBlock)
         return info
-    } else if (eventName === 'PollEnded') {
+    } else {
         let info
         info = await getPollEndedEvent(contract, startBlock, endBlock)
         return info
     }
+}
+
+const getEvents = async (chainName: chainName, eventName: event) => {
+    const { contract, startBlock, provider } = getContract(chainName)
+
+    const endBlock = await getBlockNumber(provider)
+    let currentStartBlock = startBlock
+
+    const result = []
+
+    while (currentStartBlock < endBlock) {
+        let currentEndBlock = currentStartBlock + maximumBlockRange - 1
+        if (currentEndBlock > endBlock) currentEndBlock = endBlock
+
+        const tmpResult = await getInfo(eventName, contract, currentStartBlock, currentEndBlock)
+        currentStartBlock = currentEndBlock + 1
+
+        for (let i = 0; i < tmpResult.length; ++i) {
+            result.push(tmpResult[i])
+        }
+    }
+
+    console.log(eventName, result)
+    return result
 }
 
 export {
