@@ -3,8 +3,7 @@ import { getEvents, chainName } from '@/composables/EtherLog.js'
 export function checkParameter(value: any, name: string, type: string) {
     if (typeof value !== type) {
         throw new TypeError(
-            `Parameter '${name}' is not ${
-                type === 'object' ? 'an' : 'a'
+            `Parameter '${name}' is not ${type === 'object' ? 'an' : 'a'
             } ${type}`
         )
     }
@@ -18,9 +17,11 @@ export async function getGroupMembers(
 
     // Checking Group existence
     const groupCreatedEvent: any = await getEvents(chainName, 'GroupCreated')
+
     const groupCreatedEventFiltered = groupCreatedEvent.filter(
-        (event: any) => event.groupId === groupId
+        (event: any) => event.groupId == groupId
     )[0]
+
     if (!groupCreatedEventFiltered) {
         throw new Error(`Group '${groupId}' not found`)
     }
