@@ -24,15 +24,74 @@ const maximumBlockRange = 172800
 //     'PollEnded': []
 // }
 
-const blockMap = {
+// const blockMap = {
+//     'ThunderCore Testnet': {
+//         startBlock: 104926408,
+//     },
+//     'Linea Testnet': {
+//         startBlock: 532009,
+//     },
+//     'Chiado(Gnosis) testnet': {
+//         startBlock: 3584426,
+//     },
+// }
+type EventResult = {
+    'GroupCreated': any[];
+    'MemberAdded': any[];
+    'MemberUpdated': any[];
+    'MemberRemoved': any[];
+    'PollCreated': any[];
+    'PollStarted': any[];
+    'VoteAdded': any[];
+    'PollEnded': any[];
+};
+  
+type BlockMap = {
+    [key: string]: {
+        startBlock: number;
+        result: EventResult;
+    };
+};
+  
+let blockMap: BlockMap = {
     'ThunderCore Testnet': {
         startBlock: 104926408,
+        result: {
+            'GroupCreated': [],
+            'MemberAdded': [],
+            'MemberUpdated': [],
+            'MemberRemoved': [],
+            'PollCreated': [],
+            'PollStarted': [],
+            'VoteAdded': [],
+            'PollEnded': [],
+        }
     },
     'Linea Testnet': {
         startBlock: 532009,
+        result: {
+            'GroupCreated': [],
+            'MemberAdded': [],
+            'MemberUpdated': [],
+            'MemberRemoved': [],
+            'PollCreated': [],
+            'PollStarted': [],
+            'VoteAdded': [],
+            'PollEnded': [],
+        }
     },
     'Chiado(Gnosis) testnet': {
         startBlock: 3584426,
+        result: {
+            'GroupCreated': [],
+            'MemberAdded': [],
+            'MemberUpdated': [],
+            'MemberRemoved': [],
+            'PollCreated': [],
+            'PollStarted': [],
+            'VoteAdded': [],
+            'PollEnded': [],
+        }
     },
 }
 
@@ -245,7 +304,7 @@ function getContract(chainName: chainName) {
     const address = starVotingContract.address
 
     contract = new ethers.Contract(address, ABI, provider)
-    return { contract, startBlock: blockMap[chainName].startBlock, provider }
+    return { contract, provider }
 }
 
 // Get the block number
@@ -254,15 +313,17 @@ const getBlockNumber = async (provider: any) => {
     return blockNumber
 }
 
-type event =
-    | 'GroupCreated'
-    | 'MemberAdded'
-    | 'MemberUpdated'
-    | 'MemberRemoved'
-    | 'PollCreated'
-    | 'PollStarted'
-    | 'VoteAdded'
-    | 'PollEnded'
+// type event =
+//     | 'GroupCreated'
+//     | 'MemberAdded'
+//     | 'MemberUpdated'
+//     | 'MemberRemoved'
+//     | 'PollCreated'
+//     | 'PollStarted'
+//     | 'VoteAdded'
+//     | 'PollEnded'
+const eventNameArr = ['GroupCreated', 'MemberAdded', 'MemberUpdated', 'MemberRemoved', 'PollCreated', 'PollStarted', 'VoteAdded', 'PollEnded'] as const;
+type event = typeof eventNameArr[number];
 
 const getInfo = async (eventName: event, contract: ethers.Contract, startBlock: number, endBlock: any) => {
     // for group
@@ -301,27 +362,32 @@ const getInfo = async (eventName: event, contract: ethers.Contract, startBlock: 
 }
 
 const getEvents = async (chainName: chainName, eventName: event) => {
-    const { contract, startBlock, provider } = getContract(chainName)
+    const { contract, provider } = getContract(chainName)
 
     const endBlock = await getBlockNumber(provider)
-    let currentStartBlock = startBlock
+    let currentStartBlock = blockMap[chainName].startBlock
 
-    const result = []
+    console.log("blockMap[chainName].startBlock", blockMap[chainName].startBlock)
+    console.log("endBlock", endBlock)
 
     while (currentStartBlock < endBlock) {
         let currentEndBlock = currentStartBlock + maximumBlockRange - 1
         if (currentEndBlock > endBlock) currentEndBlock = endBlock
 
-        const tmpResult = await getInfo(eventName, contract, currentStartBlock, currentEndBlock)
+        eventNameArr.forEach( async (e: event) => {
+            const tmpResult = await getInfo(e, contract, currentStartBlock, currentEndBlock)
+            for (let i = 0; i < tmpResult.length; ++i) {
+                blockMap[chainName].result[e].push(tmpResult[i])
+            }
+        });
         currentStartBlock = currentEndBlock + 1
-
-        for (let i = 0; i < tmpResult.length; ++i) {
-            result.push(tmpResult[i])
-        }
     }
 
-    console.log(eventName, result)
-    return result
+    // renew startBlock
+    blockMap[chainName].startBlock = endBlock
+
+    console.log(eventName, blockMap[chainName].result[eventName])
+    return blockMap[chainName].result[eventName]
 }
 
 export {
