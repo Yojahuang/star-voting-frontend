@@ -35,63 +35,48 @@ const maximumBlockRange = 172800
 //         startBlock: 3584426,
 //     },
 // }
-type EventResult = {
-    'GroupCreated': any[];
-    'MemberAdded': any[];
-    'MemberUpdated': any[];
-    'MemberRemoved': any[];
-    'PollCreated': any[];
-    'PollStarted': any[];
-    'VoteAdded': any[];
-    'PollEnded': any[];
-};
-  
-type BlockMap = {
-    [key: string]: {
-        startBlock: number;
-        result: EventResult;
-    };
-};
-  
-let blockMap: BlockMap = {
+// type event =
+//     | 'GroupCreated'
+//     | 'MemberAdded'
+//     | 'MemberUpdated'
+//     | 'MemberRemoved'
+//     | 'PollCreated'
+//     | 'PollStarted'
+//     | 'VoteAdded'
+//     | 'PollEnded'
+const eventNameArr = ['GroupCreated', 'MemberAdded', 'MemberUpdated', 'MemberRemoved', 'PollCreated', 'PollStarted', 'VoteAdded', 'PollEnded'] as const;
+type event = 'GroupCreated' | 'MemberAdded' | 'MemberUpdated' | 'MemberRemoved' | 'PollCreated' | 'PollStarted' | 'VoteAdded' | 'PollEnded';
+
+let blockMap = {
     'ThunderCore Testnet': {
-        startBlock: 104926408,
-        result: {
-            'GroupCreated': [],
-            'MemberAdded': [],
-            'MemberUpdated': [],
-            'MemberRemoved': [],
-            'PollCreated': [],
-            'PollStarted': [],
-            'VoteAdded': [],
-            'PollEnded': [],
-        }
+        'GroupCreated': { startBlock: 104926408, result: [] as any[] },
+        'MemberAdded': { startBlock: 104926408, result: [] as any[] },
+        'MemberUpdated': { startBlock: 104926408, result: [] as any[] },
+        'MemberRemoved': { startBlock: 104926408, result: [] as any[] },
+        'PollCreated': { startBlock: 104926408, result: [] as any[] },
+        'PollStarted': { startBlock: 104926408, result: [] as any[] },
+        'VoteAdded': { startBlock: 104926408, result: [] as any[] },
+        'PollEnded': { startBlock: 104926408, result: [] as any[] },
     },
     'Linea Testnet': {
-        startBlock: 532009,
-        result: {
-            'GroupCreated': [],
-            'MemberAdded': [],
-            'MemberUpdated': [],
-            'MemberRemoved': [],
-            'PollCreated': [],
-            'PollStarted': [],
-            'VoteAdded': [],
-            'PollEnded': [],
-        }
+        'GroupCreated': { startBlock: 532009, result: [] as any[] },
+        'MemberAdded': { startBlock: 532009, result: [] as any[] },
+        'MemberUpdated': { startBlock: 532009, result: [] as any[] },
+        'MemberRemoved': { startBlock: 532009, result: [] as any[] },
+        'PollCreated': { startBlock: 532009, result: [] as any[] },
+        'PollStarted': { startBlock: 532009, result: [] as any[] },
+        'VoteAdded': { startBlock: 532009, result: [] as any[] },
+        'PollEnded': { startBlock: 532009, result: [] as any[] },
     },
     'Chiado(Gnosis) testnet': {
-        startBlock: 3584426,
-        result: {
-            'GroupCreated': [],
-            'MemberAdded': [],
-            'MemberUpdated': [],
-            'MemberRemoved': [],
-            'PollCreated': [],
-            'PollStarted': [],
-            'VoteAdded': [],
-            'PollEnded': [],
-        }
+        'GroupCreated': { startBlock: 3584426, result: [] as any[] },
+        'MemberAdded': { startBlock: 3584426, result: [] as any[] },
+        'MemberUpdated': { startBlock: 3584426, result: [] as any[] },
+        'MemberRemoved': { startBlock: 3584426, result: [] as any[] },
+        'PollCreated': { startBlock: 3584426, result: [] as any[] },
+        'PollStarted': { startBlock: 3584426, result: [] as any[] },
+        'VoteAdded': { startBlock: 3584426, result: [] as any[] },
+        'PollEnded': { startBlock: 3584426, result: [] as any[] },
     },
 }
 
@@ -313,18 +298,6 @@ const getBlockNumber = async (provider: any) => {
     return blockNumber
 }
 
-// type event =
-//     | 'GroupCreated'
-//     | 'MemberAdded'
-//     | 'MemberUpdated'
-//     | 'MemberRemoved'
-//     | 'PollCreated'
-//     | 'PollStarted'
-//     | 'VoteAdded'
-//     | 'PollEnded'
-const eventNameArr = ['GroupCreated', 'MemberAdded', 'MemberUpdated', 'MemberRemoved', 'PollCreated', 'PollStarted', 'VoteAdded', 'PollEnded'] as const;
-type event = typeof eventNameArr[number];
-
 const getInfo = async (eventName: event, contract: ethers.Contract, startBlock: number, endBlock: any) => {
     // for group
     if (eventName === 'GroupCreated') {
@@ -365,29 +338,22 @@ const getEvents = async (chainName: chainName, eventName: event) => {
     const { contract, provider } = getContract(chainName)
 
     const endBlock = await getBlockNumber(provider)
-    let currentStartBlock = blockMap[chainName].startBlock
-
-    console.log("blockMap[chainName].startBlock", blockMap[chainName].startBlock)
-    console.log("endBlock", endBlock)
+    let currentStartBlock = blockMap[chainName][eventName].startBlock
 
     while (currentStartBlock < endBlock) {
         let currentEndBlock = currentStartBlock + maximumBlockRange - 1
         if (currentEndBlock > endBlock) currentEndBlock = endBlock
 
-        eventNameArr.forEach( async (e: event) => {
-            const tmpResult = await getInfo(e, contract, currentStartBlock, currentEndBlock)
-            for (let i = 0; i < tmpResult.length; ++i) {
-                blockMap[chainName].result[e].push(tmpResult[i])
-            }
-        });
+        const tmpResult = await getInfo(eventName, contract, currentStartBlock, currentEndBlock)
+        blockMap[chainName][eventName].result.push(...tmpResult)
+
         currentStartBlock = currentEndBlock + 1
     }
 
     // renew startBlock
-    blockMap[chainName].startBlock = endBlock
+    blockMap[chainName][eventName].startBlock = endBlock + 1
 
-    console.log(eventName, blockMap[chainName].result[eventName])
-    return blockMap[chainName].result[eventName]
+    return blockMap[chainName][eventName].result
 }
 
 export {
